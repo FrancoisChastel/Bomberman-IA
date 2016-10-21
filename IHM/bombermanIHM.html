@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Bomberman</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
+    </head>
+    <body>
+        <h1>Bomberman</h1>
+		
+		<label>Server address</label><input type="textaera" id="servAddress"></input>
+		<input type="button" onClick="request()" value="request"/>
+
+		<div id="result">-</div>
+
+        <script>
+			function request()
+			{			
+				var servAddress=document.getElementById("servAddress");
+                $.ajax({
+                    url: servAddress,
+                    type: 'POST',
+                    data: {
+                        action: '[...]',
+                        param: '[...]' // etc.
+                    }
+                })
+                .done(function(data) {
+                    $('#result').html(data);
+                })
+                .fail(function() {
+                    $('#result').html('ERREUR de chargement');
+                })
+                .always(function() {
+                    //
+                });
+			}         
+        </script>
+    </body>
+</html>
