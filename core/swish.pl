@@ -1,4 +1,4 @@
-:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5]).
+:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/2,move/5]).
 
 :- dynamic board/1.
 :- dynamic playersList/1.
@@ -32,7 +32,7 @@ block('b').
 % Objectif : Savoir si le point est acessible pour un joueur ou non
 % Retour : Si le point est égal a 'x' ou 'o' la fonction
 %         retourne false sinon true
-accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
+accessible(X,Y) :- board(Board), nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
 
 % Function : Movements
 % Objectif : Connaître si un mouvement est possible pour un joueur ou non 
@@ -89,8 +89,8 @@ play:- 	playersList(ListPlayer),
     	playersBeat(0, ListPlayer),
     	displayBoard,
     	writeln('PositionJoueur: '),
-    	write(ListPlayer),
-    	play.
+    	write(ListPlayer).
+
 
 playHtml :-
     playersList(ListPlayer),
@@ -98,12 +98,6 @@ playHtml :-
     displayBoard,
     writeln('PositionJoueur: '),
     reply_html_page(title('Bomberman'),[p(write(ListPlayer))]).
-
-playJSON(ListPlayer) :- playersList(ListPlayer),
-                playersBeat(0, ListPlayer).
-
-
-
 
 
 %displayPlayerList([]).
@@ -130,9 +124,11 @@ test:- createMap(Board),assert(board(Board)),ia(1,1).
 init(_Request):- 	createMap(Board),
     	assert(board(Board)),
     	assert(playersList([[1, 2], [2, 3], [4, 6]])).
-reply_html_page([title('Howdy')],[h1('A Simple Web Page')]).
 
-beat(_Request) :- playJSON(ListPlayer),
+reply_html_page([title('Howdy')],[h1('A Simple Web Page')],[p('Test')]).
+
+beat(_Request) :- playersList(ListPlayer),
+                playersBeat(0, ListPlayer),
                 reply_json(json([list=ListPlayer])).
 
 
