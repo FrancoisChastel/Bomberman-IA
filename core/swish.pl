@@ -1,3 +1,5 @@
+:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5]).
+
 :- dynamic board/1.
 :- dynamic playersList/1.
 
@@ -18,12 +20,30 @@ http_server(http_dispatch, [port(Port)]).
 
 
 %:- dynamic display/1.
+wall('x').
+path('_').
+bomb('b').
 
-% Accessible :
+block('x').
+block('o').
+block('b').
+
+% Function : Accessible
 % Objectif : Savoir si le point est acessible pour un joueur ou non
 % Retour : Si le point est égal a 'x' ou 'o' la fonction
 %         retourne false sinon true
-accessible(X,Y) :- board(Board),nth0(Y,Board,Line),nth0(X,Line,Point),not(Point == 'x';Point == 'o').
+accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
+
+% Function : Movements
+% Objectif : Connaître si un mouvement est possible pour un joueur ou non 
+% Retour : Si il peut true sinon false
+movements(Xp,Y,Xd,Y) :- Xp is Xd+1; Xd is Xp+1.
+movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
+
+% Function : DefineBoard
+% Objective : Define a specific board 
+% Retour : True pour valider le changement de board
+defineBoard(Board) :- assert(board(Board)).
 
 %Liste des mouvements disponible dans le jeu
 %Up 
