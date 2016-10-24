@@ -1,10 +1,8 @@
 :-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5]).
 
 :- dynamic board/1.
-:- dynamic joueur1/2.
-:- dynamic joueur2/2.
-:- dynamic joueur3/2.
-:- dynamic joueur4/2.
+:- dynamic playersList/1.
+
 %:- dynamic display/1.
 wall('x').
 path('_').
@@ -47,6 +45,16 @@ replace(Index,Current):- Index =:= Current ->
 % V1.0 : Mouvement Aléatoire sur le plateau sans attaque
 ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),accessible(NewX,NewY),!.
 
+% MouvementPlayer : update PlayerList with new player's coordinates.
+mouvementPlayer(NumPlayer, NewX, NewY) :- playersList(List),
+    updateList(NumPlayer,List, NewList, NewX,NewY),
+    retract(playersList(List)),
+    assert(playersList(NewList)).
+                 
+% Replace [X,Y] in a coordinates list. listeMaj(Index,OldList,NewList,NewX,NewT).
+updateList(0,[_|H],[[NewX,NewY]|H],NewX,NewY).                                                                        
+updateList(Index,[L|H],[L|H2], NewX, NewY):- N is Index-1, updateList(N,H,H2,NewX,NewY).
+
 % createMap :
 % Retour : La carte de jeu
 createMap(X):- X =[
@@ -61,6 +69,21 @@ createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x']
          ].
 
+play:- 	playersList(ListPlayer), 
+    	playersBeat(0, ListPlayer),
+    	displayBoard,
+    	writeln('PositionJoueur: '),
+    	write(ListPlayer),
+    	play.
+    
+%displayPlayerList([]).
+%displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
+                     
+playersBeat(_,[]).
+playersBeat(Index,[[X,Y]|T]):-ia(X,Y,NewX,NewY),
+    mouvementPlayer(Index, NewX, NewY),
+    N is Index+1, playersBeat(N,T).
+
 % createMap :
 % Objectif : Affiche la carte du jeu en allant chercher la variable globale
 displayBoard:- board(Board),display(Board).
@@ -74,4 +97,12 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 test:- createMap(Board),assert(board(Board)),ia(1,1).
 
-init:- createMap(Board),assert(board(Board)),displayBoard.
+init:- 	createMap(Board),
+    	assert(board(Board)),
+    	assert(playersList([[1, 2], [2, 3], [4, 6]])),
+    	play.
+
+
+
+
+
