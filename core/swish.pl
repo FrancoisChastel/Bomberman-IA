@@ -1,6 +1,22 @@
 :- dynamic board/1.
 :- dynamic playersList/1.
 
+:- use_module(library(http/thread_httpd)).
+:- use_module(library(http/http_dispatch)).
+:- use_module(library(http/html_write)).
+:- use_module(library(http/http_json)).
+:- use_module(library(http/http_parameters)).	 % new
+:- use_module(library(uri)).
+
+:- http_handler(root(init), init,[]).		% (1)
+:- http_handler(root(beat), beat,[]).
+
+
+server(Port) :-						% (2)
+http_server(http_dispatch, [port(Port)]).
+
+
+
 %:- dynamic display/1.
 
 % Accessible :
@@ -49,13 +65,27 @@ createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x']
          ].
 
-play:- 	playersList(ListPlayer), 
+play:- 	playersList(ListPlayer),
     	playersBeat(0, ListPlayer),
     	displayBoard,
     	writeln('PositionJoueur: '),
     	write(ListPlayer),
     	play.
-    
+
+playHtml :-
+    playersList(ListPlayer),
+    playersBeat(0, ListPlayer),
+    displayBoard,
+    writeln('PositionJoueur: '),
+    reply_html_page(title('Bomberman'),[p(write(ListPlayer))]).
+
+playJSON(ListPlayer) :- playersList(ListPlayer),
+                playersBeat(0, ListPlayer).
+
+
+
+
+
 %displayPlayerList([]).
 %displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
                      
@@ -77,12 +107,13 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 test:- createMap(Board),assert(board(Board)),ia(1,1).
 
-init:- 	createMap(Board),
+init(_Request):- 	createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 2], [2, 3], [4, 6]])),
-    	play.
+    	assert(playersList([[1, 2], [2, 3], [4, 6]])).
+reply_html_page([title('Howdy')],[h1('A Simple Web Page')]).
 
-
+beat(_Request) :- playJSON(ListPlayer),
+                reply_json(json([list=ListPlayer])).
 
 
 
