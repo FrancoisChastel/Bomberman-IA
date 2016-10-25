@@ -1,4 +1,4 @@
-:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4]).
+:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/5]).
 
 :- dynamic board/1.
 :- dynamic playersList/1.
