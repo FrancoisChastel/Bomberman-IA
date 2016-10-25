@@ -137,3 +137,21 @@ beat(_Request) :- playersList(ListPlayer),
 
 
 
+%%%%%%%%%%%%% Search if a case is dangerous	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Search for a particular bomb ... / Call by dangerParBombPlayer
+dangerPerBomb(X,Y,H):- nth0(0,H,XBomb), nth0(1,H,YBomb), nth0(3,H,Puissance), ((      X=:= XBomb, (Val is  YBomb-Y, Val >= 0 ; Val is Y-YBomb, Val >=0)); (   Y=:= YBomb, (Val is  XBomb-X, Val >= 0 ; Val is X-XBomb, Val >=0))), Puissance >= Val .
+
+% Search for a list of bomb belonging to a player ... / Call by danger 
+dangerPerBombPlayer(X,Y,[H|T]):- dangerPerBomb(X,Y,H); dangerPerBombPlayer(X,Y,T).
+
+% Search for all bombs of all players
+% Parameter 1 : x-axis 
+% Parameter 2 : y-axis
+% Parameter 3 : ListBombOnGround -> list 3 dimensions
+%%%%%%% [                               BombsPlayer1                                  ,  BombsPlayer2  ,  ...	] %%
+%%%%%%%  [             BOMB1            ,           BOMB2              ,      BOMB3 ] , .......
+%%%%%%%   [  X , Y , CountTime, Power ] , [  X , Y , CountTime , Power]
+danger(X,Y,[H|T]):- dangerPerBombPlayer(X,Y,H); danger(X,Y,T).
+
+
