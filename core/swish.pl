@@ -1,4 +1,4 @@
-:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5]).
+:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4]).
 
 :- dynamic board/1.
 :- dynamic playersList/1.
@@ -19,7 +19,11 @@ block('b').
 accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
 
 % Function : Movements
-% Objectif : Connaître si un mouvement est possible pour un joueur ou non 
+% Objectif : Connaître si un mouvement est possible pour un joueur ou non
+% Parameter 1: x-axis Player
+% Parameter 2: y-axis Player
+% Parameter 3: x-axis Destination
+% Parameter 4: y-axis Destination
 % Retour : Si il peut true sinon false
 movements(Xp,Y,Xd,Y) :- Xp is Xd+1; Xd is Xp+1.
 movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
