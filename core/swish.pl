@@ -32,7 +32,7 @@ block('b').
 % Objectif : Savoir si le point est acessible pour un joueur ou non
 % Retour : Si le point est égal a 'x' ou 'o' la fonction
 %         retourne false sinon true
-accessible(X,Y) :- board(Board), nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
+accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
 
 % Function : Movements
 % Objectif : Connaître si un mouvement est possible pour un joueur ou non
@@ -63,7 +63,7 @@ move(3,X,Y,NewX,NewY):- NewX is X-1,NewY = Y.
 replace(Index,Current):- Index =:= Current ->
     writeln('X = Current');   writeln('X').
 % V1.0 : Mouvement Aléatoire sur le plateau sans attaque
-ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),accessible(NewX,NewY),!.
+ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
 
 % MouvementPlayer : update PlayerList with new players coordinates.
 mouvementPlayer(NumPlayer, NewX, NewY) :- playersList(List),
