@@ -3,6 +3,22 @@
 :- dynamic board/1.
 :- dynamic playersList/1.
 
+:- use_module(library(http/thread_httpd)).
+:- use_module(library(http/http_dispatch)).
+:- use_module(library(http/html_write)).
+:- use_module(library(http/http_json)).
+:- use_module(library(http/http_parameters)).	 % new
+:- use_module(library(uri)).
+
+:- http_handler(root(init), init,[]).		% (1)
+:- http_handler(root(beat), beat,[]).
+
+
+server(Port) :-						% (2)
+http_server(http_dispatch, [port(Port)]).
+
+
+
 %:- dynamic display/1.
 wall('x').
 path('_').
@@ -16,7 +32,7 @@ block('b').
 % Objectif : Savoir si le point est acessible pour un joueur ou non
 % Retour : Si le point est égal a 'x' ou 'o' la fonction
 %         retourne false sinon true
-accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
+accessible(X,Y) :- board(Board), nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
 
 % Function : Movements
 % Objectif : Connaître si un mouvement est possible pour un joueur ou non
@@ -49,7 +65,7 @@ replace(Index,Current):- Index =:= Current ->
 % V1.0 : Mouvement Aléatoire sur le plateau sans attaque
 ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),accessible(NewX,NewY),!.
 
-% MouvementPlayer : update PlayerList with new player's coordinates.
+% MouvementPlayer : update PlayerList with new players coordinates.
 mouvementPlayer(NumPlayer, NewX, NewY) :- playersList(List),
     updateList(NumPlayer,List, NewList, NewX,NewY),
     retract(playersList(List)),
@@ -73,13 +89,21 @@ createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x']
          ].
 
-play:- 	playersList(ListPlayer), 
+play:- 	playersList(ListPlayer),
     	playersBeat(0, ListPlayer),
     	displayBoard,
     	writeln('PositionJoueur: '),
-    	write(ListPlayer),
-    	play.
-    
+    	write(ListPlayer).
+
+
+playHtml :-
+    playersList(ListPlayer),
+    playersBeat(0, ListPlayer),
+    displayBoard,
+    writeln('PositionJoueur: '),
+    reply_html_page(title('Bomberman'),[p(write(ListPlayer))]).
+
+
 %displayPlayerList([]).
 %displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
                      
@@ -101,12 +125,15 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 test:- createMap(Board),assert(board(Board)),ia(1,1).
 
-init:- 	createMap(Board),
+init(_Request):- 	createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 2], [2, 3], [4, 6]])),
-    	play.
+    	assert(playersList([[1, 2], [2, 3], [4, 6]])).
 
+reply_html_page([title('Howdy')],[h1('A Simple Web Page')],[p('Test')]).
 
+beat(_Request) :- playersList(ListPlayer),
+                playersBeat(0, ListPlayer),
+                reply_json(json([list=ListPlayer])).
 
 
 
