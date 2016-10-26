@@ -42,6 +42,7 @@ playHtml :-
 %%%%%%%%%%%%%%%% Dynamic and Static  predicats %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- dynamic board/1.
 :- dynamic playersList/1.
+:- dynamic bombsList/1.
 
 wall('x').
 path('_').
@@ -50,6 +51,8 @@ bomb('b').
 block('x').
 block('o').
 block('b').
+
+countTimeBomb(6).
 
 %Liste des mouvements disponible dans le jeu
 %Up 
@@ -90,12 +93,48 @@ accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point
 defineBoard(Board) :- assert(board(Board)).
 
 
-% Replace [X,Y] in a coordinates list. listeMaj(Index,OldList,NewList,NewX,NewT).
-updateList(0,[_|H],[[NewX,NewY]|H],NewX,NewY).                                                                        
-updateList(Index,[L|H],[L|H2], NewX, NewY):- N is Index-1, updateList(N,H,H2,NewX,NewY).
+% Function : updateListofListWithTwoFirstParameter
+% Objective : Replace the first and the second value of a List, but this List must belong
+% to a List
+% Generic : No - Replace [X,Y] in a coordinates list. listeMaj(Index,OldList,NewList,NewX,NewT).
+% Input
+% Index : Index of the list for change X,Y
+% FirstList : [ [X,Y,Var1,Var2], [X,Y,Var1,Var2],[X,Y,Var1,Var2],[X,Y,Var1,Var2]
+% ListReturn : Return of this function
+% NewX,NewY : New values
+updateListofListWithTwoFirstParameter(0,[[_,_,P1,P2]|T],[[NewX,NewY,P1,P2]|T],NewX,NewY).                                                                        
+updateListofListWithTwoFirstParameter(Index,[L|H],[L|H2], NewX, NewY):- N is Index-1, updateListofListWithTwoFirstParameter(N,H,H2,NewX,NewY).
 
 
-%%%%%%%%%%%%%%%%%%%%%%%% IA Side %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Function : updateListofListWithOneParameter
+% Objective : Replace a value in the List of List
+% Generic : Yes
+% Input
+% IndexList1 : Index to Get the first List Level
+% IndexList2 : Index to Update the NewValue.
+% FirstList : [ List1,List2,...ListN] with ListN = [X,Y,Z,...,ValueToUpdate,...]
+% FirstListUpdated : Return of this function
+% NewValue : Value to Update at the IndexList2
+updateListofListWithOneParameter(IndexList1,IndexList2,FirstList,FirstListUpdated,NewValue):-
+    nth0(IndexList1,FirstList,SecondList),
+    updateList(IndexList2,NewValue,SecondList,SecondListUpdated),
+    updateList(IndexList1,SecondListUpdated,FirstList,FirstListUpdated).
+
+
+
+
+% Function : updateList
+% Objective : Replace a value in a List
+% Generic : Yes
+% Input
+% --Change Value
+updateList(0,NewValue,[_|T], [NewValue|T]).
+% --For Each
+updateList(Index,NewValue,[Head|Tail],[Head|Tail1]):- Index > -1, N is Index-1, updateList(N, NewValue,Tail, Tail1), !.
+% --Overflow : Do Nothing
+updateList(_,_,L, L).
 
 % V1.0 : Mouvement Aléatoire sur le plateau sans attaque
 ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
@@ -144,7 +183,23 @@ play:- 	playersList(ListPlayer),
 
 
 %Implant Bomb
-
+% Return Value : true -> Bomb implanted / false -> Bomb not implanted
+% Parameter 1 : Index of player which implant the bomb
+implantBomb(PlayerIndex):-
+    countTimeBomb(CountTimeBomb),
+    playersList(ListPlayer),
+    nth0(PlayerIndex,ListPlayer,[X,Y,NbMaxBomb,PowerPlayer]),
+    bombsList(ListAllBomb),
+    nth0(PlayerIndex,ListAllBomb,
+         ListBombImplantByPlayer),
+    length(ListBombImplantByPlayer,Length),
+    Length < NbMaxBomb ,
+    append(ListBombImplantByPlayer,
+           [[X,Y,CountTimeBomb,PowerPlayer]],
+           NewListBombImplantByPlayer),
+    updateList(PlayerIndex,NewListImplantByPlayer,ListAllBomb,NewListAllBomb),
+    retract(bombsList(ListAllBomb)),
+    assert(bombsList(NewListAllBomb)).
 
 
 
