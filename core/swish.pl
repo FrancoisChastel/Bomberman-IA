@@ -18,7 +18,7 @@ http_server(http_dispatch, [port(Port)]).
 
 init(_Request):- 	createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 2], [2, 3], [4, 6]])).
+    	assert(playersList([[1, 2, 10, 1], [2, 3, 10, 1], [4, 6, 10, 1]])).
 
 reply_html_page([title('Howdy')],[h1('A Simple Web Page')],[p('Test')]).
 
@@ -180,7 +180,7 @@ ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),boa
 % Parameter 2 :	New x-axis for the player
 % Parameter 3 : New y-axis for the player
 mouvementPlayer(NumPlayer, NewX, NewY) :- playersList(List),
-    updateList(NumPlayer,List, NewList, NewX,NewY),
+    updateListofListWithTwoFirstParameter(NumPlayer,List, NewList, NewX,NewY),
     retract(playersList(List)),
     assert(playersList(NewList)).
                  
@@ -209,7 +209,7 @@ implantBomb(PlayerIndex):-
     append(ListBombImplantByPlayer,
            [[X,Y,CountTimeBomb,PowerPlayer]],
            NewListBombImplantByPlayer),
-    updateList(PlayerIndex,NewListImplantByPlayer,ListAllBomb,NewListAllBomb),
+    updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
     retract(bombsList(ListAllBomb)),
     assert(bombsList(NewListAllBomb)).
 
@@ -219,7 +219,7 @@ implantBomb(PlayerIndex):-
 % Parameter 1 :	Index of player
 % Parameter 2 :	The list of player                    
 playersBeat(_,[]).
-playersBeat(PlayerIndex,[[X,Y]|T]):-ia(X,Y,NewX,NewY),
+playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power]|T]):-ia(X,Y,NewX,NewY),
     mouvementPlayer(PlayerIndex, NewX, NewY),
     N is PlayerIndex+1, playersBeat(N,T).
 
