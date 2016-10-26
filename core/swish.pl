@@ -1,4 +1,4 @@
-:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/5]).
+:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4]).
 
 
 :- use_module(library(http/thread_httpd)).
@@ -209,7 +209,8 @@ implantBomb(PlayerIndex):-
     append(ListBombImplantByPlayer,
            [[X,Y,CountTimeBomb,PowerPlayer]],
            NewListBombImplantByPlayer),
-    updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
     retract(bombsList(ListAllBomb)),
     assert(bombsList(NewListAllBomb)).
 
