@@ -21,7 +21,7 @@ http_server(http_dispatch, [port(Port)]).
 
 init(_Request):- 	createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 2], [2, 3], [4, 6]])).
+    	assert(playersList([[1, 2, 10, 1], [2, 3, 10, 1], [4, 6, 10, 1]])).
 
 reply_html_page([title('Howdy')],[h1('A Simple Web Page')],[p('Test')]).
 
@@ -165,7 +165,7 @@ danger(X,Y,[H|T]):- dangerPerBombPlayer(X,Y,H); danger(X,Y,T).
 
 % MouvementPlayer : update PlayerList with new players coordinates.
 mouvementPlayer(NumPlayer, NewX, NewY) :- playersList(List),
-    updateList(NumPlayer,List, NewList, NewX,NewY),
+    updateListofListWithTwoFirstParameter(NumPlayer,List, NewList, NewX,NewY),
     retract(playersList(List)),
     assert(playersList(NewList)).
                  
