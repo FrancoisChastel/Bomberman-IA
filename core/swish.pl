@@ -109,6 +109,7 @@ dangerPerBomb(X,Y,H):- nth0(0,H,XBomb), nth0(1,H,YBomb), nth0(3,H,Puissance), ((
 dangerPerBombPlayer(X,Y,[H|T]):- dangerPerBomb(X,Y,H); dangerPerBombPlayer(X,Y,T).
 
 % Search for all bombs of all players
+% Return Value : true -> Dangerouse Case / false -> Safe case
 % Parameter 1 : x-axis 
 % Parameter 2 : y-axis
 % Parameter 3 : ListBombOnGround -> list 3 dimensions
@@ -139,6 +140,10 @@ play:- 	playersList(ListPlayer),
     	writeln('PositionJoueur: '),
     	write(ListPlayer).
 
+
+
+
+%Implant Bomb
 
 
 
