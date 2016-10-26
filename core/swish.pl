@@ -197,7 +197,7 @@ implantBomb(PlayerIndex):-
     append(ListBombImplantByPlayer,
            [[X,Y,CountTimeBomb,PowerPlayer]],
            NewListBombImplantByPlayer),
-    updateList(PlayerIndex,NewListImplantByPlayer,ListAllBomb,NewListAllBomb),
+    updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
     retract(bombsList(ListAllBomb)),
     assert(bombsList(NewListAllBomb)).
 
@@ -208,7 +208,7 @@ implantBomb(PlayerIndex):-
 % Parameter 1 : Index of player
 % Parameter 2 : The list of player                    
 playersBeat(_,[]).
-playersBeat(PlayerIndex,[[X,Y]|T]):-ia(X,Y,NewX,NewY),
+playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power]|T]):-ia(X,Y,NewX,NewY),
     mouvementPlayer(PlayerIndex, NewX, NewY),
     N is PlayerIndex+1, playersBeat(N,T).
 
