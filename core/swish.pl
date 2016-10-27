@@ -1,5 +1,5 @@
-:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/4]).
 
+:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/4]).
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
@@ -50,6 +50,8 @@ block('x').
 block('o').
 block('b').
 
+destructibleBlock('o').
+
 countTimeBomb(6).
 
 % Function    : Move 
@@ -91,6 +93,38 @@ movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
 % Return      : If the point targeted by the x-axis and y-axis is a block it
 %		return false else true
 accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
+
+
+% Function    : Destructible
+% Objective   : Know if a case is destructible
+% Parameter 1 :	Board concerned (need to be well-formed) that will be target-
+%		ed
+% Parameter 2 :	x-axis of the targeted 
+% Parameter 3 : y-axis of the targeted
+% Return      : If the point targeted by the x-axis and y-axis is destructi-
+%		ble return true else false
+
+destructible(Board,X,Y):- nth0(Y,Board,Line), nth0(X,Line,Point), destructibleBlock(Point). 
+
+
+% Function             : DistanceManhattan
+% Objective            : Find the distance of manhattan between a list of point and a target
+% Parameter 1          : List which contains points represented by a list of x-axis and y-axis
+% Parameter 2          : x-axis of the target
+% Parameter 3          : y-axis of the target
+% Parameter 4 / Return : List of distance of manhattan. The distances and the points in the
+%		first parameter are linked by the index of the list.
+distanceManhattan([],_,_,[]).
+distanceManhattan([[XCase,YCase]|T],X,Y,[H|T2]):- distanceManhattan(T,X,Y,T2), H is abs(X-XCase)+abs(Y-YCase).
+
+% Function             : Weigthed
+% Objective            : Adjust the distance of manhattan
+% Parameter 1          : The map game
+% Parameter 2          : List which contains points represented by a list of x-axis and y-axis
+% Parameter 3          : List of distance. Distance and points of parameter 2 are linked by their index
+% Parameter 4 / Return : List of distance weighted
+weighted(_,[],[],[]).
+weighted(Board,[[XCase,YCase]|T],[HOldList|TOldList],[HNewList|TNewList]):- weighted(Board,T,TOldList,TNewList), (   destructible(Board,XCase,YCase) -> HNewList is HOldList+0.1 ; HNewList = HOldList ).
 
 
 % Function    :	DefineBoard
@@ -224,7 +258,12 @@ implantBomb(PlayerIndex):-
     append(ListBombImplantByPlayer,
            [[X,Y,CountTimeBomb,PowerPlayer]],
            NewListBombImplantByPlayer),
+<<<<<<< HEAD
     updateListofListWithOneParameter(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
+=======
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
+>>>>>>> ff7aad056f67ee62e0731c3d7b7b32e04588eac6
     retract(bombsList(ListAllBomb)),
     assert(bombsList(NewListAllBomb)).
 
