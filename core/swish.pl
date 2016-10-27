@@ -1,9 +1,8 @@
-:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/5]).
+:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/4]).
 
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
-:- use_module(library(http/html_write)).
 :- use_module(library(http/http_json)).
 :- use_module(library(http/http_parameters)).	 % new
 :- use_module(library(uri)).
@@ -18,7 +17,7 @@ http_server(http_dispatch, [port(Port)]).
 
 init(_Request):- 	createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 2, 10, 1], [2, 3, 10, 1], [4, 6, 10, 1]])).
+    	assert(playersList([[1, 1, 10, 0], [7, 1, 10, 1], [1, 7, 10, 2], [7, 7, 10, 3]])).
 
 reply_html_page([title('Howdy')],[h1('A Simple Web Page')],[p('Test')]).
 
@@ -110,7 +109,7 @@ defineBoard(Board) :- assert(board(Board)).
 % Parameter 4 :	New x-axis value
 % Parameter 5 :	New y-axis value
 updateListofListWithTwoFirstParameter(0,[[_,_,P1,P2]|T],[[NewX,NewY,P1,P2]|T],NewX,NewY).                                                                        
-updateListofListWithTwoFirstParameter(Index,[L|H],[L|H2], NewX, NewY)i :- N is Index-1, updateListofListWithTwoFirstParameter(N,H,H2,NewX,NewY).
+updateListofListWithTwoFirstParameter(Index,[L|H],[L|H2], NewX, NewY) :- N is Index-1, updateListofListWithTwoFirstParameter(N,H,H2,NewX,NewY).
 
 
 % Function    :	updateListofListWithOneParameter
@@ -137,9 +136,6 @@ updateList(0,NewValue,[_|T], [NewValue|T]).
 updateList(Index,NewValue,[Head|Tail],[Head|Tail1]) :- Index > -1, N is Index-1, updateList(N, NewValue,Tail, Tail1), !.
 % --Overflow : Do Nothing
 updateList(_,_,L, L).
-
-% V1.0 : Mouvement Aléatoire sur le plateau sans attaque
-ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
 
 
 % Function    :	Search if a case is dangerous -> see danger()	
@@ -179,18 +175,37 @@ ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),boa
 % Parameter 1 : Number that identify the player
 % Parameter 2 :	New x-axis for the player
 % Parameter 3 : New y-axis for the player
-mouvementPlayer(NumPlayer, NewX, NewY) :- playersList(List),
+mouvementPlayer(NumPlayer, X, Y, NewX, NewY) :- playersList(List),
     updateListofListWithTwoFirstParameter(NumPlayer,List, NewList, NewX,NewY),
     retract(playersList(List)),
-    assert(playersList(NewList)).
-                 
+    assert(playersList(NewList)),
+    updateBoard(NumPlayer,X, Y,NewX,NewY).
+
+%
+% replace a single cell in a list-of-lists
+% - Board is B
+% - The cell to be replaced at x coordinate (X)
+%   and the y coordinate (Y)
+% - The replacement value is Z
+% - the transformed list-of-lists (result) is R
+%
+replace( B , X , Y , Z , R ) :- append(RP,[H|T],B),     % decompose the list-of-lists into a prefix, a list and a suffix
+                                length(RP,X) ,                 % check the prefix length
+                                append(CP,[_|CS],H) ,    % decompose that row into a prefix, a column and a suffix
+                                length(CP,Y) ,                 % check the prefix length: do we have the desired column?
+                                append(CP,[Z|CS],RN) , % if so, replace the column with its new value
+                                append(RP,[RN|T],R).   % and assemble the transformed list-of-lists
+
+updateBoard(NumPlayer, X, Y,NewX,NewY) :- board(Board), replace(Board,X,Y,'_',NewBoard1), replace(NewBoard1,NewX,NewY,NumPlayer,NewBoard),
+retract(board(Board)),
+assert(board(NewBoard)).
 
 % A Game turn
 play:- 	playersList(ListPlayer),
     	playersBeat(0, ListPlayer),
     	displayBoard,
-    	writeln('PositionJoueur: '),
-    	write(ListPlayer).
+        sleep(1),
+        play.
 
 
 % Function    :	implantBomb
@@ -209,7 +224,7 @@ implantBomb(PlayerIndex):-
     append(ListBombImplantByPlayer,
            [[X,Y,CountTimeBomb,PowerPlayer]],
            NewListBombImplantByPlayer),
-    updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
+    updateListofListWithOneParameter(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
     retract(bombsList(ListAllBomb)),
     assert(bombsList(NewListAllBomb)).
 
@@ -220,7 +235,7 @@ implantBomb(PlayerIndex):-
 % Parameter 2 :	The list of player                    
 playersBeat(_,[]).
 playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power]|T]):-ia(X,Y,NewX,NewY),
-    mouvementPlayer(PlayerIndex, NewX, NewY),
+    mouvementPlayer(PlayerIndex,X, Y, NewX, NewY),
     N is PlayerIndex+1, playersBeat(N,T).
 
 
@@ -244,13 +259,13 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 % Return      :	A game map
 createMap(X):- X =[
        	  ['x','x','x','x','x','x','x','x','x'],
-          ['x','A','_','_','_','_','_','B','x'],
-          ['x','_','x','_','x','_','x','_','x'],
           ['x','_','_','_','_','_','_','_','x'],
           ['x','_','x','_','x','_','x','_','x'],
           ['x','_','_','_','_','_','_','_','x'],
           ['x','_','x','_','x','_','x','_','x'],
-          ['x','C','_','_','_','_','_','D','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
           ['x','x','x','x','x','x','x','x','x']
          ].
 
