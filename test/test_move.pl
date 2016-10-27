@@ -102,19 +102,19 @@ test(deplacementDiagnoalDownLeft):- Xp=4, Yp=4, Xd=3, Yd=5, not(main:movements(X
 
 
 
-test(updateFirstIndex):- Index=0, HoldList=[[2,4],[5,6],[3,4],[6,2]], NewX=1, NewY=5, main:updateList(Index,HoldList,NewList,NewX,NewY),
-	NewList == [[1,5],[5,6],[3,4],[6,2]].
+test(updateFirstIndex):- Index=0, HoldList=[[2,4],[5,6],[3,4],[6,2]], Val=[5,1], main:updateList(Index,Val,HoldList,NewList),
+	NewList == [[5,1],[5,6],[3,4],[6,2]].
 
 
-test(updateLastIndex):- Index=3, HoldList=[[2,4],[5,6],[3,4],[6,2]], NewX=1, NewY=5, main:updateList(Index,HoldList,NewList,NewX,NewY),
+test(updateLastIndex):- Index=3, HoldList=[[2,4],[5,6],[3,4],[6,2]], Val=[1,5], main:updateList(Index,Val,HoldList,NewList),
 	NewList == [[2,4],[5,6],[3,4],[1,5]].
 
-test(updateNoMatterIndex):- Index=2, HoldList=[[2,4],[5,6],[3,4],[6,2]], NewX=1, NewY=5, main:updateList(Index,HoldList,NewList,NewX,NewY),
+test(updateNoMatterIndex):- Index=2, HoldList=[[2,4],[5,6],[3,4],[6,2]], Val=[1,5], main:updateList(Index,Val,HoldList,NewList),
 	NewList == [[2,4],[5,6],[1,5],[6,2]].
 
 % updateOverFlowIndex must be false
 
-test(updateOverFlowIndex):- Index=5, HoldList=[[2,4],[5,6],[3,4],[6,2]], NewX=1, NewY=5, not(main:updateList(Index,HoldList,_,NewX,NewY)).
+test(updateOverFlowIndex):- Index=5, HoldList=[[2,4],[5,6],[3,4],[6,2]], Val=[1,5], updateList(Index,Val,HoldList,HoldList).
 
 
 :- end_tests(updateList).

@@ -258,12 +258,8 @@ implantBomb(PlayerIndex):-
     append(ListBombImplantByPlayer,
            [[X,Y,CountTimeBomb,PowerPlayer]],
            NewListBombImplantByPlayer),
-<<<<<<< HEAD
     updateListofListWithOneParameter(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
-=======
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
->>>>>>> ff7aad056f67ee62e0731c3d7b7b32e04588eac6
     retract(bombsList(ListAllBomb)),
     assert(bombsList(NewListAllBomb)).
 
