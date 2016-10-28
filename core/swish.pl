@@ -94,6 +94,14 @@ movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
 %		return false else true
 accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
 
+% Function    : Attainable
+% Objective   : Know if a point is attainable for a player
+% Parameter 1 : Board concerned (need to be well-formed) that will be targeted
+% Parameter 2 : x-axis of the targeted move  
+% Parameter 3 : y-axis of the targeted move
+% Return      : If the point targeted by the x-axis and y-axis is not attainable it
+%   return false else true
+attainable(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), (destructibleBlock(Point);not(block(Point))).
 
 % Function    : Destructible
 % Objective   : Know if a case is destructible
