@@ -343,4 +343,4 @@ createMap(X):- X =[
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Offensive %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ia_offensive()
+%ia_offensive()
