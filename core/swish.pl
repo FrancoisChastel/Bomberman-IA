@@ -274,6 +274,38 @@ playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power]|T]):-ia(X,Y,NewX,NewY),
     N is PlayerIndex+1, playersBeat(N,T).
 
 
+% Function             : backToSafePlace
+% Objective            : Find the first move to execute to go in safe place
+% Parameter 1          : x-axis of the point of the start
+% Parameter 2          : y-axis of the point of the start
+% Parameter 3          : map of the game
+% Parameter 4          : bomb list of te game
+% Parameter 5          : just give empty list [], it represent points already found
+% Parameter 6          : Number of movement max necessary to be in safe place
+% Parameter 7 / Return : 0 -> safe place not fount / 1 -> safe place found
+% Parameter 8 / Return : Move the player has to do ti be in safe place
+%			 Undefined if safe place not found /
+%			   else:
+%			   - 0 : up
+%			   - 1 : right
+%			   - 2 : down
+%			   - 3 : left
+
+backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
+    DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 >= 0,
+    (   accessible(Board,X,Y), not(nth0(Index,N,[X,Y])))->
+    append(N,[[X,Y]],N2),
+    (   
+	( not(danger(X,Y,ListBomb)) , Safe = 1) ;
+	( Ydep is Y-1 , backToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
+	( Xdep is X-1, backToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
+	( Ydep is Y+1, backToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+	( Xdep is X+1, backToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 )
+    )
+    ;   Safe = 0.
+
+
+
 % Function    :	displayBoard
 % Objective   : Display the map that is stored in global parameter
 displayBoard:- board(Board),display(Board).
@@ -308,3 +340,7 @@ createMap(X):- X =[
 %displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Offensive %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ia_offensive()
