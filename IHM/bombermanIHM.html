@@ -4,38 +4,104 @@
         <title>Bomberman</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width">
-        <script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
+        <link rel="stylesheet" href="css/style.css">
+        <script src="js/jquery.js"></script>
+        <script src="js/ajax.js"></script>
+        <script src="js/game.js"></script>
+        
     </head>
     <body>
         <h1>Bomberman</h1>
 		
-		<label>Server address</label><input type="textaera" id="servAddress"></input>
-		<input type="button" onClick="request()" value="request"/>
+		<label>Server address</label><input type="textaera" id="servAddress">
+		<input type="button" onClick="request()" value="Lancer le jeu"/>
 
 		<div id="result">-</div>
 
         <script>
+            var players = [];
+            var oldPlayers = [];
+            var board = [];
 			function request()
-			{			
-				var servAddress=document.getElementById("servAddress");
+			{
+                var url = $('#servAddress').val();
                 $.ajax({
-                    url: servAddress,
-                    type: 'POST',
-                    data: {
-                        action: '[...]',
-                        param: '[...]' // etc.
+                    url:url+'init',
+                    type:'GET',
+                    dataType:'json',
+                    success:function(data)
+                    {
+                        oldPlayers = data['players'];
+                        players = data['players'];
+                        board = data['board'];
+                        display();
+                        setTimeout(motor,1000);
                     }
                 })
-                .done(function(data) {
-                    $('#result').html(data);
-                })
-                .fail(function() {
-                    $('#result').html('ERREUR de chargement');
-                })
-                .always(function() {
-                    //
+            }
+            
+            function motor()
+            {
+                //Appel ajax beat
+                var url = $('#servAddress').val();
+                $.ajax({
+                    url:url+'beat',
+                    type:'GET',
+                    dataType:'json',
+                    success:function(data)
+                    {
+                        oldPlayers = players;
+                        players = data['list'];
+                        console.log(players);
+                    }
                 });
-			}         
+                display();
+                setTimeout(motor,1000);
+            }
+            
+            function display()
+            {
+                var contenu = '<table id="map">';
+                for(var i=0;i<board.length;i++)
+                {
+                    contenu+='<tr>';
+                    for(var j=0;j<board[i].length;j++)
+                    {
+                        contenu+='<td>';
+                        if(board[i][j] == "x")
+                        {
+                            contenu+='<img id="block" src="img/wall.png">'
+                        }
+                        else
+                        {
+                            var occupied = false;
+                            var filled = false;
+                            for(var n=0;n<players.length;n++)
+                            {
+                                if(i==players[n][0] && j==players[n][1] && !occupied)
+                                {
+                                    contenu+='<div style="position: relative; left: 0; top: 0;">';
+                                    contenu+='<img id="block" src="img/grass.png" style="position: relative; top: 0; left: 0;z-index:1;"/>';
+                                    contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 8px; left: 8px;z-index:2">';
+                                    contenu+='</div>';
+                                    filled=true;
+                                    occupied=true;
+                                }
+                            }
+                            if(!filled)
+                            {
+                                contenu+='<img id="block" src="img/grass.png">';
+                            }
+                        }
+
+                        contenu+='</td>';
+                    }
+                    contenu+='</tr>';
+                }
+                contenu+='</table>';
+                $("#result").html(contenu);
+            }
+			         
         </script>
     </body>
 </html>

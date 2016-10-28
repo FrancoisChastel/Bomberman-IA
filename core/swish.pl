@@ -15,22 +15,15 @@
 server(Port) :-						% (2)
 http_server(http_dispatch, [port(Port)]).
 
-init(_Request):- 	createMap(Board),
+init(_Request):-
+        retractall(board(_)),
+        retractall(playersList(_)),
+        createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 1, 10, 0], [7, 1, 10, 1], [1, 7, 10, 2], [7, 7, 10, 3]])).
+    	assert(playersList([[1, 1, 10, 0], [7, 1, 10, 1], [1, 7, 10, 2], [7, 7, 10, 3]])),
+        playersList(Players),
+        reply_json(json([board=Board,players=Players])).
 
-reply_html_page([title('Howdy')],[h1('A Simple Web Page')],[p('Test')]).
-
-beat(_Request) :- playersList(ListPlayer),
-                playersBeat(0, ListPlayer),
-                reply_json(json([list=ListPlayer])).
-
-playHtml :-
-    playersList(ListPlayer),
-    playersBeat(0, ListPlayer),
-    displayBoard,
-    writeln('PositionJoueur: '),
-    reply_html_page(title('Bomberman'),[p(write(ListPlayer))]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -257,6 +250,11 @@ play:- 	playersList(ListPlayer),
     	displayBoard,
         sleep(1),
         play.
+
+
+beat(_Request) :-   playersList(ListPlayer),
+                    playersBeat(0, ListPlayer),
+                    reply_json(json([list=ListPlayer])).
 
 
 % Function    :	implantBomb
