@@ -189,6 +189,16 @@ updateList(Index,NewValue,[Head|Tail],[Head|Tail1]) :- Index > -1, N is Index-1,
 updateList(_,_,L, L).
 
 
+% Function    :	updateBoard
+% Objective   :	update the board with new element
+% Parameter 1 :	Board of origin 
+% Parameter 2 :	x-axis of modification
+% Parameter 3 : y-axis of modifcation 
+% Parameter 4 :	new value 
+% Parameter 5 :	New Board that will be returned
+updateBoard(Board, Xm, Ym, NewValue, NewBoard) :- nth0(Ym, Board, TLine), updateList(Xm, NewValue, TLine, NLine),
+		updateList(Ym, NLine, Board, NewBoard). 
+
 % Function    :	Search if a case is dangerous -> see danger()	
 % Objective   :	Search for a particular bomb ... / Call by dangerParBombPlayer
 % Parameter 1 : N/C
@@ -220,6 +230,18 @@ ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),boa
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Function    :	BombExplode
+% Parameter 1 :	Board 
+% Parameter 2 :	x-axis of the bomb
+% Parameter 3 :	y-axis of the bomb
+% Parameter 4 : effeciveness of the bomb
+% Parameter 5 :	return of the function that is an update of the board
+bombExplode(Board, Xb, Yb, 0, NewBoard).
+%- Case when this is a destructible that stop the spread
+bombExplode(Board, Xb, Yb, Eb, NewBoard) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
+		destructibleBlock(TElem), destroyBlock(Board, Xb, Yb, NewBoard).
+bombExplode(Board, Xb, Yb, Eb, NewBoard).
 
 % Function    :	mouvementPlayer
 % Objective   :	update player's list with new players coordinates
