@@ -221,8 +221,27 @@ safeAndAttainable(X,Y):-bombsList(ListBomb),
 %                createMap(Board),
 %                assert(board(Board)),
 %                safeAndAttainable(X,Y).
-    
-    
+   
+%testCheckSafeAndAttainableSquareAroundPlayer(X,Y,List):- assert(bombsList([[10,0,5,5]])),
+%                                   createMap(Board),
+%                                 assert(board(Board)),
+%                           checkSafeAndAttainableSquareAroundPlayer(X,Y,List).
+
+% Function    : checkSafeAndAttainableSquareAroundPlayer
+% Objective   : Know if the target square is safe and attainable
+% Parameter 1 : x-axis 
+% Parameter 2 : y-axis
+% Return      : List of Square safe and attainable with the associate mouvement number [[Mouvement,X,Y],...] 
+%         Ex : Top-Left Corner
+%         Return : [[1, 2, 1], [2, 1, 2]], Possible to go at Rigth or Down
+%         Reminder : 0-Top,1-Rigth,2-Down,3-Left
+checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList):-
+                    Y0 is Y-1,(safeAndAttainable(X,Y0) -> append([],[[0,X,Y0]], ListAfterUp);ListAfterUp = []),
+                    X1 is X+1,(safeAndAttainable(X1,Y) -> append(ListAfterUp,[[1,X1,Y]], ListAfterRigth);ListAfterRigth = ListAfterUp),
+                    Y2 is Y+1,(safeAndAttainable(X,Y2) -> append(ListAfterRigth,[[2,X,Y2]], ListAfterDown);ListAfterDown = ListAfterRigth),
+                    X3 is X-1,(safeAndAttainable(X3,Y) -> append(ListAfterDown,[[3,X3,Y]], ListAfterLeft);ListAfterLeft = ListAfterDown),
+                    SquareList = ListAfterLeft.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -336,7 +355,7 @@ backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
     )
     ;   Safe = 0.
 
- 
+
 
 % Function    : displayBoard
 % Objective   : Display the map that is stored in global parameter
