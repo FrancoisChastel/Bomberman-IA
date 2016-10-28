@@ -126,6 +126,15 @@ distanceManhattan([[XCase,YCase]|T],X,Y,[H|T2]):- distanceManhattan(T,X,Y,T2), H
 weighted(_,[],[],[]).
 weighted(Board,[[XCase,YCase]|T],[HOldList|TOldList],[HNewList|TNewList]):- weighted(Board,T,TOldList,TNewList), (   destructible(Board,XCase,YCase) -> HNewList is HOldList+0.1 ; HNewList = HOldList ).
 
+% Function             : LineOfFire
+% Objective            : Know if the first position can reach the second for a power input
+% Parameter 1          : X1
+% Parameter 2          : Y1
+% Parameter 3          : X2
+% Parameter 4          : Y2
+% Parameter 4          : Power
+% Return         : True if the first position can reach the second for a power input else False
+lineOfFire(X1,Y1,X2,Y2,Power):- (X1 = X2; Y1 = Y2),(distanceManhattan([[X1,Y1]],X2,Y2,[Distance|_]),Distance =< Power).
 
 % Function    :	DefineBoard
 % Objective   :	Define a specific board in the context 
