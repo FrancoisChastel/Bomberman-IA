@@ -232,13 +232,28 @@ safeAndAttainable(X,Y):-bombsList(ListBomb),
 %                safeAndAttainable(X,Y).
    
 % TestAnalyse ChekSafeAndAttainablesSquareAroundPlayer and Manhattan Distance and Wheited
-testAnalyse(X,Y,TargetX,TargetY,SquareList,LengthSquare,ListManhattan,WheitedList):- assert(bombsList([[10,0,5,5]])),
+% Function    : testAnalyse
+% Objective   : Know best square around player with aim
+% Parameter 1 : x-axis 
+% Parameter 2 : y-axis
+% Parameter 3 : x-axis target 
+% Parameter 4 : y-axis  target 
+% Parameter 5/Return : All Square safe and atteinable around player
+% Parameter 6/Return : The best square
+% Parameter 7/Return : Length of list of All Square
+% Parameter 8/Return : List of distance of Manhattan
+% Parameter 9/Return : List of distance Wheited
+% Return      : True -> Safe And Attainable / False -> Unsafe or Unattainable
+
+testAnalyse(X,Y,TargetX,TargetY,SquareList,BestSquare,LengthSquare,ListManhattan,WheitedList):- assert(bombsList([[10,0,5,5]])),
                                 createMap(Board),
                                 assert(board(Board)),
-                                              checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
-                        length(SquareList,LengthSquare),
-                        distanceManhattan(SquareList,TargetX,TargetY,ListManhattan),
-                        weighted(Board,SquareList,ListManhattan,WheitedList).
+                                checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
+                            length(SquareList,LengthSquare),
+                            distanceManhattan(SquareList,TargetX,TargetY,ListManhattan),
+                            weighted(Board,SquareList,ListManhattan,WheitedList),
+                  minList(WheitedList,Index,_),
+                  nth0(Index,SquareList,BestSquare).
 
 
 %testCheckSafeAndAttainableSquareAroundPlayer(X,Y,List):- assert(bombsList([[10,0,5,5]])),
