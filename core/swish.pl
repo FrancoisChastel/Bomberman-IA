@@ -218,6 +218,19 @@ dangerPerBombPlayer(X,Y,[H|T]):- dangerPerBomb(X,Y,H); dangerPerBombPlayer(X,Y,T
 % Return      :	True -> Dangerous case / False -> Safe case
 danger(X,Y,[H|T]):- dangerPerBombPlayer(X,Y,H); danger(X,Y,T).
 
+
+% Function    :	Direction
+% Objective   :	Return x-axis and y-axis that correspond to a move in a direction
+% Parameter 1 :	x-axis of origin
+% Parameter 2 :	y-axis of orgin
+% Parameter 3 :	Direction of the move (0: up, 1: right, 2:down, 3:left)
+% Parameter 4 : x-axis of destination that will be compute
+% Parameter 5 :	y-axis of destination that will be compute
+direction(X, Yo, 0, X, Yd):- Yd is Yo-1.
+direction(X, Yo, 2, X, Yd):- Yd is Yo+1.
+direction(Xo, Y, 1, Xd, Y):- Xd is Xo+1.
+direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -230,18 +243,21 @@ ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),boa
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % Function    :	BombExplode
 % Parameter 1 :	Board 
 % Parameter 2 :	x-axis of the bomb
 % Parameter 3 :	y-axis of the bomb
 % Parameter 4 : effeciveness of the bomb
 % Parameter 5 :	return of the function that is an update of the board
-bombExplode(Board, Xb, Yb, 0, NewBoard).
 %- Case when this is a destructible that stop the spread
-bombExplode(Board, Xb, Yb, Eb, NewBoard) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		destructibleBlock(TElem), destroyBlock(Board, Xb, Yb, NewBoard).
-bombExplode(Board, Xb, Yb, Eb, NewBoard).
+bombExplode(Board, Xb, Yb, Eb, NewBoard) :- 	lineExplode(Board, Xb, Yb, Eb, TBoard0, 0);
+						lineExpldoe(TBoard0, Xb, Yb, Eb, TBoard1, 1);
+						lineExplode(TBoard1, Xb, Yb, Eb, TBoard2, 2);
+						lineExplode(TBoard2, Xb, Yb, Eb, NewBoard, 3).
+lineExplode(_, _, _, 0, _, _).
+lineExplode(Board, Xb, Yb, Eb, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
+		( destructibleBlock(TElemn)-> path(Path), updateBoard(Board, Xb, Yb, Path, NewBoard);
+		  not(block(TElem)), TEb is TEb-1,  direction(Xb, Yb, Direction, TXb, TXb), lineExplode(Board, TXb, TYb, TEb, NewBoard, Direction).
 
 % Function    :	mouvementPlayer
 % Objective   :	update player's list with new players coordinates
