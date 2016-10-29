@@ -222,24 +222,33 @@ safeAndAttainable(X,Y):-bombsList(ListBomb),
 %                assert(board(Board)),
 %                safeAndAttainable(X,Y).
    
+% TestAnalyse ChekSafeAndAttainablesSquareAroundPlayer and Manhattan Distance and Wheited
+testAnalyse(X,Y,TargetX,TargetY,SquareList,LengthSquare,ListManhattan,WheitedList):- assert(bombsList([[10,0,5,5]])),
+                                createMap(Board),
+                                assert(board(Board)),
+                                              checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
+                        length(SquareList,LengthSquare),
+                        distanceManhattan(SquareList,TargetX,TargetY,ListManhattan),
+                        weighted(Board,SquareList,ListManhattan,WheitedList).
+
+
 %testCheckSafeAndAttainableSquareAroundPlayer(X,Y,List):- assert(bombsList([[10,0,5,5]])),
 %                                   createMap(Board),
 %                                 assert(board(Board)),
-%                           checkSafeAndAttainableSquareAroundPlayer(X,Y,List).
+%                          checkSafeAndAttainableSquareAroundPlayer(X,Y,List).
 
 % Function    : checkSafeAndAttainableSquareAroundPlayer
 % Objective   : Know if the target square is safe and attainable
 % Parameter 1 : x-axis 
 % Parameter 2 : y-axis
-% Return      : List of Square safe and attainable with the associate mouvement number [[Mouvement,X,Y],...] 
-%         Ex : Top-Left Corner
-%         Return : [[1, 2, 1], [2, 1, 2]], Possible to go at Rigth or Down
-%         Reminder : 0-Top,1-Rigth,2-Down,3-Left
+% Return      : List of Square safe and attainable [[X,Y],...] 
+%         Ex : Top-Left Corner [1,1]
+%         Return : [[2, 1], [1, 2]], Possible to go at Rigth or Down
 checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList):-
-                    Y0 is Y-1,(safeAndAttainable(X,Y0) -> append([],[[0,X,Y0]], ListAfterUp);ListAfterUp = []),
-                    X1 is X+1,(safeAndAttainable(X1,Y) -> append(ListAfterUp,[[1,X1,Y]], ListAfterRigth);ListAfterRigth = ListAfterUp),
-                    Y2 is Y+1,(safeAndAttainable(X,Y2) -> append(ListAfterRigth,[[2,X,Y2]], ListAfterDown);ListAfterDown = ListAfterRigth),
-                    X3 is X-1,(safeAndAttainable(X3,Y) -> append(ListAfterDown,[[3,X3,Y]], ListAfterLeft);ListAfterLeft = ListAfterDown),
+                    Y0 is Y-1,(safeAndAttainable(X,Y0) -> append([],[[X,Y0]], ListAfterUp);ListAfterUp = []),
+                    X1 is X+1,(safeAndAttainable(X1,Y) -> append(ListAfterUp,[[X1,Y]], ListAfterRigth);ListAfterRigth = ListAfterUp),
+                    Y2 is Y+1,(safeAndAttainable(X,Y2) -> append(ListAfterRigth,[[X,Y2]], ListAfterDown);ListAfterDown = ListAfterRigth),
+                    X3 is X-1,(safeAndAttainable(X3,Y) -> append(ListAfterDown,[[X3,Y]], ListAfterLeft);ListAfterLeft = ListAfterDown),
                     SquareList = ListAfterLeft.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
