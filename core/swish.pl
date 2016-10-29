@@ -188,6 +188,15 @@ updateList(Index,NewValue,[Head|Tail],[Head|Tail1]) :- Index > -1, N is Index-1,
 % --Overflow : Do Nothing
 updateList(_,_,L, L).
 
+% Function    : minList
+% Objective   : Return the lowest value with associate index of a number list.
+%               If there are two index with the same value, this function return 
+%               the smaller index.
+% Parameter 1         : List to analyse
+% Parameter 2 /Return : Index Min Value
+% Parameter 3 /Return : Value
+% Parameter 4 : New list after modification
+minList(List,Index,Value):- min_list(List,Value),nth0(Index,List, Value),!.
 
 % Function    : Search if a case is dangerous -> see danger() 
 % Objective   : Search for a particular bomb ... / Call by dangerParBombPlayer
