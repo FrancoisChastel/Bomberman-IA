@@ -199,6 +199,7 @@ updateList(_,_,L, L).
 updateBoard(Board, Xm, Ym, NewValue, NewBoard) :- nth0(Ym, Board, TLine), updateList(Xm, NewValue, TLine, NLine),
 		updateList(Ym, NLine, Board, NewBoard). 
 
+
 % Function    :	Search if a case is dangerous -> see danger()	
 % Objective   :	Search for a particular bomb ... / Call by dangerParBombPlayer
 % Parameter 1 : N/C
@@ -250,14 +251,20 @@ ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),boa
 % Parameter 4 : effeciveness of the bomb
 % Parameter 5 :	return of the function that is an update of the board
 %- Case when this is a destructible that stop the spread
-bombExplode(Board, Xb, Yb, Eb, NewBoard) :- 	lineExplode(Board, Xb, Yb, Eb, TBoard0, 0);
-						lineExpldoe(TBoard0, Xb, Yb, Eb, TBoard1, 1);
-						lineExplode(TBoard1, Xb, Yb, Eb, TBoard2, 2);
+bombExplode(Board, Xb, Yb, Eb, NewBoard) :- 	lineExplode(Board, Xb, Yb, Eb, TBoard0, 0),
+						lineExplode(TBoard0, Xb, Yb, Eb, TBoard1, 1),
+						lineExplode(TBoard1, Xb, Yb, Eb, TBoard2, 2),
 						lineExplode(TBoard2, Xb, Yb, Eb, NewBoard, 3).
-lineExplode(_, _, _, 0, _, _).
+lineExplode(Board, _, _, 0, NewBoard, _):- NewBoard = Board.
 lineExplode(Board, Xb, Yb, Eb, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		( destructibleBlock(TElemn)-> path(Path), updateBoard(Board, Xb, Yb, Path, NewBoard);
-		  not(block(TElem)), TEb is TEb-1,  direction(Xb, Yb, Direction, TXb, TXb), lineExplode(Board, TXb, TYb, TEb, NewBoard, Direction).
+		 ( 	destructibleBlock(TElem)-> 
+				( path(Path), updateBoard(Board, Xb, Yb, Path, NewBoard) );
+	  	  		( not(block(TElem))-> 
+					( TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), lineExplode(Board, TXb, TYb, TEb, NewBoard, Direction));
+					(NewBoard = Board)
+				)
+		).
+
 
 % Function    :	mouvementPlayer
 % Objective   :	update player's list with new players coordinates
