@@ -13,12 +13,12 @@ git clone https://github.com/FrancoisChastel/Bomberman-IA.git
 After this, you can have execute the tests by going in the dir test and executing the script test.sh 
 ```shell
 cd Bomberman-IA
-.test/test.sh
+bash test/test.sh
 ```
 
 If everything is ok, you can now run our bomberman by executing run.sh in the core dir, and after that open a browser and have a look on [localhost (port: 8080)](http://localhost:8080)
 ```shell
-.core/run.sh
+bash core/run.sh
 ```
 Now you can play ;) 
 
