@@ -1,4 +1,3 @@
-
 :-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/4]).
 
 :- use_module(library(http/thread_httpd)).
@@ -50,6 +49,14 @@ block('x').
 block('o').
 block('b').
 
+bonus('p').
+bonus('c').
+
+puissance('p').
+capacite('c').
+
+destructibleBlock('p').
+destructibleBlock('c').
 destructibleBlock('o').
 
 countTimeBomb(6).
@@ -67,6 +74,7 @@ move(0,X,Y,NewX,NewY):- NewX = X,NewY is Y-1.
 move(1,X,Y,NewX,NewY):- NewX is X+1,NewY = Y. 
 move(2,X,Y,NewX,NewY):- NewX = X,NewY is Y+1. 
 move(3,X,Y,NewX,NewY):- NewX is X-1,NewY = Y. 
+
 
 
 % Function    :	Movements
@@ -147,7 +155,7 @@ lineOfFire(X1,Y1,X2,Y2,Power):- (X1 = X2; Y1 = Y2),(distanceManhattan([[X1,Y1]],
 % Function    :	DefineBoard
 % Objective   :	Define a specific board in the context 
 % Parameter 1 :	Board that will be set
-% Return      :	True pour valider le changement de board
+% Return      :	True in order to validate that the board has been set 
 defineBoard(Board) :- assert(board(Board)).
 
 
@@ -249,22 +257,61 @@ ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),boa
 % Parameter 2 :	x-axis of the bomb
 % Parameter 3 :	y-axis of the bomb
 % Parameter 4 : effeciveness of the bomb
-% Parameter 5 :	return of the function that is an update of the board
-%- Case when this is a destructible that stop the spread
-bombExplode(Board, Xb, Yb, Eb, NewBoard) :- 	lineExplode(Board, Xb, Yb, Eb, TBoard0, 0),
-						lineExplode(TBoard0, Xb, Yb, Eb, TBoard1, 1),
-						lineExplode(TBoard1, Xb, Yb, Eb, TBoard2, 2),
-						lineExplode(TBoard2, Xb, Yb, Eb, NewBoard, 3).
-lineExplode(Board, _, _, 0, NewBoard, _):- NewBoard = Board.
-lineExplode(Board, Xb, Yb, Eb, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
+% Parameter 5 :	list of players
+% Parameter 6 :	return of the function that is an update of the list of players
+% Parameter 7 :	return of the function that is an update of the board
+%- Init of the explosion
+bombExplode(Board, Xb, Yb, Eb, ListOfPlayers, NewListOfPlayers, NewBoard) :- 	
+						lineExplode(Board, Xb, Yb, Eb, ListOfPlayers, TPlayers0, TBoard0, 0),
+						lineExplode(TBoard0, Xb, Yb, Eb, TPlayers0, TPlayers1, TBoard1, 1),
+						lineExplode(TBoard1, Xb, Yb, Eb, TPlayers1, TPlayers2, TBoard2, 2),
+						lineExplode(TBoard2, Xb, Yb, Eb, TPlayers2, NewListOfPlayers, NewBoard, 3).
+%- Spread in a line of the explosion
+lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board, Players = NewPlayers.
+lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
 		 ( 	destructibleBlock(TElem)-> 
-				( path(Path), updateBoard(Board, Xb, Yb, Path, NewBoard) );
+				( destroyBlock(Board, Xb, Yb, NewBoard) );
 	  	  		( not(block(TElem))-> 
-					( TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), lineExplode(Board, TXb, TYb, TEb, NewBoard, Direction));
-					(NewBoard = Board)
+					( TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), lineExplode(Board, TXb, TYb, TEb, Players, NewPlayers, NewBoard, Direction));
+					(NewBoard = Board, killPlayers(Xb, Yb, Players, NewPlayers))
 				)
 		).
 
+
+% Function    :	DestroyBlock
+% Objective   :	destroy a destructible block with the possibility of droping 
+%		a bonus with a certain probability
+% Parameter 1 :	Board 
+% Parameter 2 :	x-axis of the destroyed block
+% Parameter 3 :	y-axis of the destroyed block
+% Parameter 3 :	Output board
+destroyBlock( Board, Xe, Ye, NewBoard):-
+		random(0, 5, Probability), (
+			 ( Probability is 0, capacite(Bonus), updateBoard(Board, Xe, Ye, Bonus, NewBoard));
+			 ( Probability is 1, puissance(Bonus), updateBoard(Board, Xe, Ye, Bonus, NewBoard)); 
+			 ( path(Path), updateBoard( Board, Xe, Ye, Path, NewBoard )).
+
+
+% Function    :	KillPlayers
+% Objective   :	verify the lists of objects and destroy the potential object
+% Parameter 1 :	x-axis of the destroyed object
+% Parameter 2 :	y-axis of the destroyed object
+% Parameter 3 :	ListOfPlayers
+% Parameter 4 :	NewListOfPlayers
+killPlayers( _, _, [], []).
+killPlayers( Xd, Yd, [Hp|Tp], [Hn|Tn]):- killPlayers( Xd, Yd, Tp, Tn), 
+		( nth0(0, Hp, Xd), nth0(1, Hp, Yd), killPlayer(Hp, Hn) );
+		( Hn = Hp ).
+		
+
+% Function    :	killPlayer
+% Objective   :	kill a player given in parameter 
+% Parameter 1 : player that will be killed
+% Parameter 2 :	killed player
+killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer). 
+
+% Function    :	ExplodeObject 
+% Objective   :	Explode possible object that can be in the current case
 
 % Function    :	mouvementPlayer
 % Objective   :	update player's list with new players coordinates
