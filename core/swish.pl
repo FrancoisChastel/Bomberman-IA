@@ -52,6 +52,8 @@ block('b').
 
 destructibleBlock('o').
 
+
+
 countTimeBomb(6).
 
 % Function    : Move 
@@ -93,6 +95,14 @@ movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
 % Return      : If the point targeted by the x-axis and y-axis is a block it
 %   return false else true
 accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
+
+% Function   : selectSquare
+% Objective  : Recognize the type of Square
+% Parameter 1         : Board concerned (need to be well-formed) that will be target-ed
+% Parameter 2         : x-axis of the targeted move  
+% Parameter 3         : y-axis of the targeted move
+% Parameter 4 /Return : Type of Square if Point not Initialize
+selectSquare(Board,X,Y,Point) :- nth0(Y,Board,Line), nth0(X,Line,Point).
 
 % Function    : Attainable
 % Objective   : Know if a point is attainable for a player
@@ -231,29 +241,6 @@ safeAndAttainable(X,Y):-bombsList(ListBomb),
 %                assert(board(Board)),
 %                safeAndAttainable(X,Y).
    
-% TestAnalyse ChekSafeAndAttainablesSquareAroundPlayer and Manhattan Distance and Wheited
-% Function    : testAnalyse
-% Objective   : Know best square around player with aim
-% Parameter 1 : x-axis 
-% Parameter 2 : y-axis
-% Parameter 3 : x-axis target 
-% Parameter 4 : y-axis  target 
-% Parameter 5/Return : All Square safe and atteinable around player
-% Parameter 6/Return : The best square
-% Parameter 7/Return : Length of list of All Square
-% Parameter 8/Return : List of distance of Manhattan
-% Parameter 9/Return : List of distance Wheited
-% Return      : True -> Safe And Attainable / False -> Unsafe or Unattainable
-
-testAnalyse(X,Y,TargetX,TargetY,SquareList,BestSquare,LengthSquare,ListManhattan,WheitedList):- assert(bombsList([[10,0,5,5]])),
-                                createMap(Board),
-                                assert(board(Board)),
-                                checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
-                            length(SquareList,LengthSquare),
-                            distanceManhattan(SquareList,TargetX,TargetY,ListManhattan),
-                            weighted(Board,SquareList,ListManhattan,WheitedList),
-                  minList(WheitedList,Index,_),
-                  nth0(Index,SquareList,BestSquare).
 
 
 %testCheckSafeAndAttainableSquareAroundPlayer(X,Y,List):- assert(bombsList([[10,0,5,5]])),
@@ -282,6 +269,117 @@ checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList):-
 
 % V1.0 : Mouvement Aléatoire sur le plateau sans attaque
 ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
+
+% Function    : iaAggresive
+% Objective   : IA Agressive : Defend and attack
+% Parameter 1 : Index of Ia in PlayerList
+% Parameter 2 : Index of Target in PlayerList
+% Parameter 3 /Return : If 1 drop a bomb else no
+% Parameter 4 /Return : Direction of NextMove [0,1,2,3,-1] 
+%        - -1: stay
+%        - 0 : up
+%        - 1 : right
+%        - 2 : down
+%        - 3 : left
+
+iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-              
+  % Get Global Variable
+    bombsList(BombList),
+    board(Board),
+    playersList(PlayerList),
+    nth0(IndexPlayer,PlayerList,[X,Y,_,Power]),
+    nth0(IndexTarget,PlayerList,[TargetX,TargetY,_,_]),
+  % ------------------------------------
+  
+    (danger(X,Y,BombList) ->
+      (
+          %Danger
+          backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
+          actionSafe(Safe,Bomb,Move,NextMove)
+      );(
+            % No Danger
+            lineOfFire(X,Y,TargetX,TargetY,Power) ->
+            (   
+              % Target in line of Fire
+              % For the next version implement better move after drop bomb
+              Bomb = 1,
+              NextMove = 0,
+              writeln("Line Of Fire")
+            );( 
+              % No Ennemi in Line of Fire
+              checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
+              length(SquareList,LengthSquareList),
+              actionAnalyseAllSquare(LengthSquareList,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove)
+            )
+        )
+    ),
+  !.
+  
+%Called By IaAggresive  
+%------------------------------------------------  
+actionSafe(1,Bomb,Move,NextMove):-
+        % It's possible to escape 
+            Bomb = 0,
+            NextMove = Move,
+            writeln("Try to escape").
+
+actionSafe(0,Bomb,_,NextMove):-
+      % IA is Dead --> Last Stand
+            Bomb = 1,
+            NextMove = -1,
+            writeln("Dead").
+%------------------------------------------------  
+
+%Called By IaAggresive  
+%------------------------------------------------  
+actionAnalyseAllSquare(0,_,_,_,_,_,_,Bomb,NextMove):-
+        Bomb = 0,
+            NextMove = -1,
+            writeln("I prefer don't move").
+
+actionAnalyseAllSquare(_,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove):-
+        distanceManhattan(SquareList,TargetX,TargetY,ListManhattan),
+            weighted(Board,SquareList,ListManhattan,WheitedList),
+            minList(WheitedList,Index,_),
+            nth0(Index,SquareList,[NextX,NextY]),
+            selectSquare(Board,NextX,NextY,TypeSquare),
+            actionSquare(TypeSquare,X,Y,NextX,NextY,Bomb,NextMove).
+%------------------------------------------------  
+    
+%Called By ActionAnalyseAllSquare  
+%------------------------------------------------  
+actionSquare('o',_,_,_,_,Bomb,NextMove):-
+      Bomb = 1,
+            %Find Safe Square next turn...
+            NextMove = 0,
+            writeln("I go mine a little").
+actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
+         Bomb = 0,
+             move(NextMove,X,Y,NextX,NextY),
+             writeln("Move").
+%------------------------------------------------  
+
+%testIaAgressive(IndexPlayer,Bomb,Move):-
+%                  assert(bombsList([[[1,8,5,3]]])),
+%                  assert(playersList([[1,1,1,5],[1,5,1,5]])),
+%                  createMap(Board),
+%                  assert(board(Board)), 
+%                  IndexTarget is IndexPlayer+1,
+%                  iaAggresive(IndexPlayer,IndexTarget,Bomb,Move).
+
+createMap(X):- X =[
+          ['x','x','x','x','x','x','x','x','x'],
+          ['x','_','x','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','x','x','x','x','x','x','x','x']
+          ].
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -374,8 +472,12 @@ playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power]|T]):-ia(X,Y,NewX,NewY),
 %        - 1 : right
 %        - 2 : down
 %        - 3 : left
-
 backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
+            functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,IsSafe,IsMove) ->
+            Safe = IsSafe,Move = IsMove;
+          Safe = 0,Move = -1.
+
+functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
     DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 >= 0,
     (   accessible(Board,X,Y), not(nth0(Index,N,[X,Y])))->
     append(N,[[X,Y]],N2),
@@ -408,17 +510,6 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 % Objective   : Generate a sample of a map
 % Parameter 1 : The variable that will store the map
 % Return      : A game map
-createMap(X):- X =[
-          ['x','x','x','x','x','x','x','x','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','x','x','x','x','x','x','x','x']
-         ].
 
 %displayPlayerList([]).
 %displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
