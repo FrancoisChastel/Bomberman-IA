@@ -1,5 +1,5 @@
 
-:-module(main,[wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/4]).
+:-module(main,[board/1,wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/4,applyMove/3,playersList/1,attainable/3,destructible/3]).
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
@@ -78,6 +78,15 @@ move(3,X,Y,NewX,NewY):- NewX is X-1,NewY = Y.
 % Return      : False if player can't move, true if it can
 movements(Xp,Y,Xd,Y) :- Xp is Xd+1; Xd is Xp+1.
 movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
+
+% Function    : applyMove
+% Objective   : Save the new x-axis and y-axis  of player
+% Parameter 1 : Index of player in the list
+% Parameter 2 : New x-axis of the player
+% Parameter 3 : New y-axis of the player
+applyMove(Index,X,Y):- playersList(ListPlayers),nth0(Index, ListPlayers, InfoPlayer), nth0(2,InfoPlayer,MaxBomb),nth0(3,InfoPlayer,Power),
+                        updateList(Index,[X,Y,MaxBomb,Power],ListPlayers,NewListPlayers),
+			retract(playersList(ListPlayers)), assert(playersList(NewListPlayers)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -200,9 +209,9 @@ minList(List,Index,Value):- min_list(List,Value),nth0(Index,List, Value),!.
 
 % Function    : Search if a case is dangerous -> see danger() 
 % Objective   : Search for a particular bomb ... / Call by dangerParBombPlayer
-% Parameter 1 : N/C
-% Parameter 2 : N/C
-% Parameter 3 : N/C
+% Parameter 1 : x-axis of the case we search if it is in danger
+% Parameter 2 : y-axis of the case we search if it is in danger
+% Parameter 3 : list information of one bomb
 dangerPerBomb(X,Y,H):- nth0(0,H,XBomb), nth0(1,H,YBomb), nth0(3,H,Puissance), ((      X=:= XBomb, (Val is  YBomb-Y, Val >= 0 ; Val is Y-YBomb, Val >=0)); (   Y=:= YBomb, (Val is  XBomb-X, Val >= 0 ; Val is X-XBomb, Val >=0))), Puissance >= Val .
 
 
