@@ -243,14 +243,6 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%% AIs of the game %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% V1.0 : Mouvement Aléatoire sur le plateau sans attaque
-ia(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Function    :	BombExplode
 % Parameter 1 :	Board 
@@ -378,7 +370,7 @@ implantBomb(PlayerIndex):-
 % Parameter 1 :	Index of player
 % Parameter 2 :	The list of player                    
 playersBeat(_,[]).
-playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power]|T]):-ia(X,Y,NewX,NewY),
+playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power]|T]):-ia_random(X,Y,NewX,NewY),
     mouvementPlayer(PlayerIndex,X, Y, NewX, NewY),
     N is PlayerIndex+1, playersBeat(N,T).
 
@@ -449,6 +441,14 @@ createMap(X):- X =[
 %displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Random %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ia_random(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Offensive %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
