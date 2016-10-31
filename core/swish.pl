@@ -78,6 +78,11 @@ destructibleBlock('o').
 %- Default bomb-timing
 countTimeBomb(6).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%% Tools %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Function    : Move 
 % Objective   : Obtain the new coordonate for the movement of an object based
 %     		on the three availables movement (up, right, down, left)
@@ -113,10 +118,7 @@ applyMove(Index,X,Y):- playersList(ListPlayers),nth0(Index, ListPlayers, InfoPla
                         updateList(Index,[X,Y,MaxBomb,Power],ListPlayers,NewListPlayers),
 			retract(playersList(ListPlayers)), assert(playersList(NewListPlayers)).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-%%%%%%%%%%%%%%%% Tools %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Function    : Accessible
 % Objective   : Know if a point is accessible for a player
 % Parameter 1 : Board concerned (need to be well-formed) that will be targeted
@@ -293,6 +295,7 @@ checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList):-
                     X3 is X-1,(safeAndAttainable(X3,Y) -> append(ListAfterDown,[[X3,Y]], ListAfterLeft);ListAfterLeft = ListAfterDown),
                     SquareList = ListAfterLeft.
 
+
 % Function    :	Direction
 % Objective   :	Return x-axis and y-axis that correspond to a move in a direction
 % Parameter 1 :	x-axis of origin
@@ -423,6 +426,22 @@ createMap(X):- X =[
 
 %%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Function    :	CheckBombs
+% Parameter 1 :	Board
+% Parameter 2 :	List of players
+% Parameter 3 :	List of bombs
+% Parameter 4 :	New board
+% Parameter 5 :	New list of players
+% Parameter 6 :	New list of bombs
+checkBombs( Board, ListOfPlayers, [], Board, ListOfPlayers, []).
+checkBombs( Board, ListOfPlayers, [Hb|Tb], NewBoard, NewListOfPlayers, [Hnb|Tnb]):-
+		checkBombs( Board, ListOfPlayers, Tb, TBoard, TListOfPlayers, Tnb), 
+		( nth0(2, Hb, TDecompte) is 1 )->
+			( nth0(0, Hb, Xb), nth0(1, Hb, Yb), nth0(2, Hb, Eb), bombExplode( TBoard, Xb, Yb, Eb, TlistOfPlayers, NewListOfPlayer, NewBoard) );
+			( NDecompte is TDecompte-1, replaceList(2, NDecompte, Hb, Hnb),
+			NewBoard = Board, NewListOfPlayers = NewListOfPlayers ).
+
+
 % Function    :	BombExplode
 % Parameter 1 :	Board 
 % Parameter 2 :	x-axis of the bomb
@@ -481,8 +500,6 @@ killPlayers( Xd, Yd, [Hp|Tp], [Hn|Tn]):- killPlayers( Xd, Yd, Tp, Tn),
 % Parameter 2 :	killed player
 killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer). 
 
-% Function    :	ExplodeObject 
-% Objective   :	Explode possible object that can be in the current case
 
 % Function    : mouvementPlayer
 % Objective   : update player's list with new players coordinates
