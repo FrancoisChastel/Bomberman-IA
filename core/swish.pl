@@ -298,7 +298,7 @@ iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-
     board(Board),
     playersList(PlayerList),
     nth0(IndexPlayer,PlayerList,[X,Y,_,Power]),
-    nth0(IndexTarget,PlayerList,[TargetX,TargetY,_,_]),
+    checkTargetInList(IndexTarget,PlayerList,[TargetX,TargetY,_,_]),
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
@@ -325,6 +325,14 @@ iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-
     ),
   !.
   
+% Called By IaAggresive
+%------------------------------------------------  
+% Handle Overflow if IA Player is the last of PlayerList
+% If isnt last Then IndexTarget = IndexTarget else IndexTarget = 0 
+checkTargetInList(Index,List,Elem):-nth0(Index, List, Elem).
+checkTargetInList(_,List,Elem):-nth0(0, List, Elem).
+%------------------------------------------------ 
+
 %Called By IaAggresive  
 %------------------------------------------------  
 actionSafe(1,Bomb,Move,NextMove):-
@@ -369,13 +377,16 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
              writeln("Move").
 %------------------------------------------------  
 
+
 %testIaAgressive(IndexPlayer,Bomb,Move):-
 %                  assert(bombsList([[[1,8,5,3]]])),
 %                  assert(playersList([[1,1,1,5],[1,5,1,5]])),
 %                  createMap(Board),
 %                  assert(board(Board)), 
-%                  IndexTarget is IndexPlayer+1,
+%                  IndexTarget is IndexPlayer+1.
 %                  iaAggresive(IndexPlayer,IndexTarget,Bomb,Move).
+
+
 
 createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x'],
