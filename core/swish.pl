@@ -541,12 +541,7 @@ beat(_Request) :-   playersList(ListPlayer),
 % Objective   :	Implant Bomb
 % Return      :	true -> Bomb implanted / false -> Bomb not implanted
 % Parameter 1 :	Index of player which implant the bomb
-=======
-% Function    : implantBomb
-% Objective   : Implant Bomb
-% Return      : true -> Bomb implanted / false -> Bomb not implanted
-% Parameter 1 : Index of player which implant the bomb
->>>>>>> 3616c58e4b0e445c51b670f4b7484f435429a0b1
+
 implantBomb(PlayerIndex):-
     countTimeBomb(CountTimeBomb),
     playersList(ListPlayer),
