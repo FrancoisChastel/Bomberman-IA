@@ -1,16 +1,27 @@
-:-module(main,[board/1,wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/4,applyMove/3,playersList/1,attainable/3,destructible/3]).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Author(s):    N.Haim, F.Chastel, C.Aparicio, A.Payan && A.Breton   	%
+% Creation:     20/09/2016                                      	%
+% Version :     v0.1                                           		%
+% Description : AI project at INSA Lyon that aim to represent bomberman	%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%% Header %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+:- module(main,[board/1,wall/1,path/1,bomb/1,block/1,accessible/3,move/5,movements/4,updateList/4,applyMove/3,playersList/1,attainable/3,destructible/3]).
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_json)).
-:- use_module(library(http/http_parameters)).  % new
+:- use_module(library(http/http_parameters)).
 :- use_module(library(uri)).
 
-:- http_handler(root(init), init,[]).   % (1)
+:- http_handler(root(init), init,[]).
 :- http_handler(root(beat), beat,[]).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%% Server Side %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%% Server Side %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 server(Port) :-           % (2)
 http_server(http_dispatch, [port(Port)]).
@@ -32,43 +43,46 @@ playHtml :-
     writeln('PositionJoueur: '),
     reply_html_page(title('Bomberman'),[p(write(ListPlayer))]).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%:- dynamic display/1.
 
-%%%%%%%%%%%%%%%% Dynamic and Static  predicats %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%% Dynamic and Static  predicats %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- dynamic board/1.
 :- dynamic playersList/1.
 :- dynamic bombsList/1.
 
+%-- Board representation of the elements
 wall('x').
 path('_').
 bomb('b').
 
+%- Element that are not reachable
 block('x').
 block('o').
 block('b').
 
+%- Bonus that can be taken by the player
 bonus('p').
 bonus('c').
 
+%- Features of the bonus in function of their representation
 puissance('p').
 capacite('c').
 
+%- Block that can be destroyed by a bomb
 destructibleBlock('p').
 destructibleBlock('c').
 destructibleBlock('o').
 
-
-
+%- Default bomb-timing
 countTimeBomb(6).
 
 % Function    : Move 
 % Objective   : Obtain the new coordonate for the movement of an object based
-%     on the three availables movement (up, right, down, left)
+%     		on the three availables movement (up, right, down, left)
 % Parameter 1 : Direction based on a number (0: up, 1: right, 2: down, 3:
-%     left)
+%     		left)
 % Parameter 2 : Current x-axis of the object 
 % Parameter 3 : Current y-axis of the object
 % Parameter 4 : New x-axis of the object after the move
@@ -86,9 +100,9 @@ move(3,X,Y,NewX,NewY):- NewX is X-1,NewY = Y.
 % Parameter 3 : x-axis Destination
 % Parameter 4 : y-axis Destination
 % Return      : False if player can't move, true if it can
-
 movements(Xp,Y,Xd,Y) :- Xp is Xd+1; Xd is Xp+1.
 movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
+
 
 % Function    : applyMove
 % Objective   : Save the new x-axis and y-axis  of player
@@ -99,78 +113,77 @@ applyMove(Index,X,Y):- playersList(ListPlayers),nth0(Index, ListPlayers, InfoPla
                         updateList(Index,[X,Y,MaxBomb,Power],ListPlayers,NewListPlayers),
 			retract(playersList(ListPlayers)), assert(playersList(NewListPlayers)).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% Tools %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%%%%%%%%%%%%%%%% Tools %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Function    : Accessible
 % Objective   : Know if a point is accessible for a player
-% Parameter 1 : Board concerned (need to be well-formed) that will be target-
-%   ed
+% Parameter 1 : Board concerned (need to be well-formed) that will be targeted
 % Parameter 2 : x-axis of the targeted move  
 % Parameter 3 : y-axis of the targeted move
 % Return      : If the point targeted by the x-axis and y-axis is a block it
-%   return false else true
+%   		return false else true
 accessible(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
 
-% Function   : selectSquare
-% Objective  : Recognize the type of Square
-% Parameter 1         : Board concerned (need to be well-formed) that will be target-ed
-% Parameter 2         : x-axis of the targeted move  
-% Parameter 3         : y-axis of the targeted move
-% Parameter 4 /Return : Type of Square if Point not Initialize
+
+% Function    :	selectSquare
+% Objective   :	Recognize the type of Square
+% Parameter 1 :	Board concerned (need to be well-formed) that will be target-ed
+% Parameter 2 :	x-axis of the targeted move  
+% Parameter 3 :	y-axis of the targeted move
+% Parameter 4 :	Type of Square if Point not Initialize
 selectSquare(Board,X,Y,Point) :- nth0(Y,Board,Line), nth0(X,Line,Point).
+
 
 % Function    : Attainable
 % Objective   : Know if a point is attainable for a player
 % Parameter 1 : Board concerned (need to be well-formed) that will be targeted
 % Parameter 2 : x-axis of the targeted move  
 % Parameter 3 : y-axis of the targeted move
-% Return      : If the point targeted by the x-axis and y-axis is not attainable it
-%   return false else true
+% Return      : If the point targeted by the x-axis and y-axis is not attainable it return false else true
 attainable(Board,X,Y) :- nth0(Y,Board,Line), nth0(X,Line,Point), (destructibleBlock(Point);not(block(Point))).
+
 
 % Function    : Destructible
 % Objective   : Know if a case is destructible
-% Parameter 1 : Board concerned (need to be well-formed) that will be target-
-%   ed
+% Parameter 1 : Board concerned (need to be well-formed) that will be targeted
 % Parameter 2 : x-axis of the targeted 
 % Parameter 3 : y-axis of the targeted
-% Return      : If the point targeted by the x-axis and y-axis is destructi-
-%   ble return true else false
-
+% Return      : If the point targeted by the x-axis and y-axis is destructible return true else false
 destructible(Board,X,Y):- nth0(Y,Board,Line), nth0(X,Line,Point), destructibleBlock(Point). 
 
 
-% Function             : DistanceManhattan
-% Objective            : Find the distance of manhattan between a list of point and a target
-% Parameter 1          : List which contains points represented by a list of x-axis and y-axis
-% Parameter 2          : x-axis of the target
-% Parameter 3          : y-axis of the target
-% Parameter 4 / Return : List of distance of manhattan. The distances and the points in the
-%   first parameter are linked by the index of the list.
+% Function    :	DistanceManhattan
+% Objective   :	Find the distance of manhattan between a list of point and a target
+% Parameter 1 :	List which contains points represented by a list of x-axis and y-axis
+% Parameter 2 :	x-axis of the target
+% Parameter 3 :	y-axis of the target
+% Parameter 4 :	List of distance of manhattan. The distances and the points in the first parameter are linked by the index of the list.
 distanceManhattan([],_,_,[]).
 distanceManhattan([[XCase,YCase]|T],X,Y,[H|T2]):- distanceManhattan(T,X,Y,T2), H is abs(X-XCase)+abs(Y-YCase).
 
-% Function             : Weigthed
-% Objective            : Adjust the distance of manhattan
-% Parameter 1          : The map game
-% Parameter 2          : List which contains points represented by a list of x-axis and y-axis
-% Parameter 3          : List of distance. Distance and points of parameter 2 are linked by their index
-% Parameter 4 / Return : List of distance weighted
+
+% Function    :	Weigthed
+% Objective   :	Adjust the distance of manhattan
+% Parameter 1 :	The map game
+% Parameter 2 :	List which contains points represented by a list of x-axis and y-axis
+% Parameter 3 :	List of distance. Distance and points of parameter 2 are linked by their index
+% Parameter 4 :	List of distance weighted
 weighted(_,[],[],[]).
 weighted(Board,[[XCase,YCase]|T],[HOldList|TOldList],[HNewList|TNewList]):- weighted(Board,T,TOldList,TNewList), (   destructible(Board,XCase,YCase) -> HNewList is HOldList+0.1 ; HNewList = HOldList ).
 
-% Function             : LineOfFire
-% Objective            : Know if the first position can reach the second for a power input
-% Parameter 1          : X1
-% Parameter 2          : Y1
-% Parameter 3          : X2
-% Parameter 4          : Y2
-% Parameter 4          : Power
-% Return         : True if the first position can reach the second for a power input else False
+
+% Function    :	LineOfFire
+% Objective   :	Know if the first position can reach the second for a power input
+% Parameter 1 :	X1
+% Parameter 2 :	Y1
+% Parameter 3 :	X2
+% Parameter 4 :	Y2
+% Parameter 4 :	Power
+% Return      :	True if the first position can reach the second for a power input else False
 lineOfFire(X1,Y1,X2,Y2,Power):- (X1 = X2; Y1 = Y2),(distanceManhattan([[X1,Y1]],X2,Y2,[Distance|_]),Distance =< Power).
+
 
 % Function    : DefineBoard
 % Objective   : Define a specific board in the context 
@@ -180,8 +193,7 @@ defineBoard(Board) :- assert(board(Board)).
 
 
 % Function    : updateListofListWithTwoFirstParameter
-% Objective   : Replace the first and the second value of a List, but this 
-%   List must belong to a List
+% Objective   : Replace the first and the second value of a List, but this  List must belong to a List
 % Parameter 1 : Replace [X,Y] in a coordinates list. listeMaj(Index,OldList,NewList,NewX,NewT).
 % Parameter 2 : Index of the list for change X,Y
 % Parameter 3 : List returned
@@ -216,15 +228,16 @@ updateList(Index,NewValue,[Head|Tail],[Head|Tail1]) :- Index > -1, N is Index-1,
 % --Overflow : Do Nothing
 updateList(_,_,L, L).
 
+
 % Function    : minList
 % Objective   : Return the lowest value with associate index of a number list.
-%               If there are two index with the same value, this function return 
-%               the smaller index.
+%               If there are two index with the same value, this function return the smaller index.
 % Parameter 1         : List to analyse
 % Parameter 2 /Return : Index Min Value
 % Parameter 3 /Return : Value
 % Parameter 4 : New list after modification
 minList(List,Index,Value):- min_list(List,Value),nth0(Index,List, Value),!.
+
 
 % Function    :	updateBoard
 % Objective   :	update the board with new element
@@ -243,10 +256,9 @@ updateBoard(Board, Xm, Ym, NewValue, NewBoard) :- nth0(Ym, Board, TLine), update
 % Parameter 2 : y-axis of the case we search if it is in danger
 % Parameter 3 : list information of one bomb
 dangerPerBomb(X,Y,H):- nth0(0,H,XBomb), nth0(1,H,YBomb), nth0(3,H,Puissance), ((      X=:= XBomb, (Val is  YBomb-Y, Val >= 0 ; Val is Y-YBomb, Val >=0)); (   Y=:= YBomb, (Val is  XBomb-X, Val >= 0 ; Val is X-XBomb, Val >=0))), Puissance >= Val .
-
-
 % Search for a list of bomb belonging to a player ... / Call by danger 
 dangerPerBombPlayer(X,Y,[H|T]):- dangerPerBomb(X,Y,H); dangerPerBombPlayer(X,Y,T).
+
 
 % Function    : Search for all bombs of all players
 % Parameter 1 : x-axis 
@@ -254,6 +266,7 @@ dangerPerBombPlayer(X,Y,[H|T]):- dangerPerBomb(X,Y,H); dangerPerBombPlayer(X,Y,T
 % Parameter 3 : ListBombOnGround -> list 3 dimensions
 % Return      : True -> Dangerous case / False -> Safe case
 danger(X,Y,[H|T]):- dangerPerBombPlayer(X,Y,H); danger(X,Y,T).
+
 
 % Function    : safeAndAttainable
 % Objective   : Know if the target square is safe and attainable
@@ -265,34 +278,20 @@ safeAndAttainable(X,Y):-bombsList(ListBomb),
               not(danger(X,Y,ListBomb)),
               attainable(Board,X,Y).
 
-%testSafeAndAttainable(X,Y):- assert(bombsList([[10,0,5,5]])),
-%                createMap(Board),
-%                assert(board(Board)),
-%                safeAndAttainable(X,Y).
-   
-
-
-%testCheckSafeAndAttainableSquareAroundPlayer(X,Y,List):- assert(bombsList([[10,0,5,5]])),
-%                                   createMap(Board),
-%                                 assert(board(Board)),
-%                          checkSafeAndAttainableSquareAroundPlayer(X,Y,List).
 
 % Function    : checkSafeAndAttainableSquareAroundPlayer
 % Objective   : Know if the target square is safe and attainable
 % Parameter 1 : x-axis 
 % Parameter 2 : y-axis
 % Return      : List of Square safe and attainable [[X,Y],...] 
-%         Ex : Top-Left Corner [1,1]
-%         Return : [[2, 1], [1, 2]], Possible to go at Rigth or Down
+%         	Ex : 	Top-Left Corner [1,1]
+%        		Return : [[2, 1], [1, 2]], Possible to go at Rigth or Down
 checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList):-
                     Y0 is Y-1,(safeAndAttainable(X,Y0) -> append([],[[X,Y0]], ListAfterUp);ListAfterUp = []),
                     X1 is X+1,(safeAndAttainable(X1,Y) -> append(ListAfterUp,[[X1,Y]], ListAfterRigth);ListAfterRigth = ListAfterUp),
                     Y2 is Y+1,(safeAndAttainable(X,Y2) -> append(ListAfterRigth,[[X,Y2]], ListAfterDown);ListAfterDown = ListAfterRigth),
                     X3 is X-1,(safeAndAttainable(X3,Y) -> append(ListAfterDown,[[X3,Y]], ListAfterLeft);ListAfterLeft = ListAfterDown),
                     SquareList = ListAfterLeft.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 % Function    :	Direction
 % Objective   :	Return x-axis and y-axis that correspond to a move in a direction
@@ -306,6 +305,18 @@ direction(X, Yo, 2, X, Yd):- Yd is Yo+1.
 direction(Xo, Y, 1, Xd, Y):- Xd is Xo+1.
 direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%% IA RANDOM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ia_random(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%% IA AGGRESIVE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Function    : iaAggresive
 % Objective   : IA Agressive : Defend and attack
 % Parameter 1 : Index of Ia in PlayerList
@@ -317,7 +328,6 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 %        - 1 : right
 %        - 2 : down
 %        - 3 : left
-
 iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-              
   % Get Global Variable
     bombsList(BombList),
@@ -395,14 +405,6 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
              writeln("Move").
 %------------------------------------------------  
 
-%testIaAgressive(IndexPlayer,Bomb,Move):-
-%                  assert(bombsList([[[1,8,5,3]]])),
-%                  assert(playersList([[1,1,1,5],[1,5,1,5]])),
-%                  createMap(Board),
-%                  assert(board(Board)), 
-%                  IndexTarget is IndexPlayer+1,
-%                  iaAggresive(IndexPlayer,IndexTarget,Bomb,Move).
-
 createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x'],
           ['x','_','x','_','_','_','_','_','x'],
@@ -416,11 +418,11 @@ createMap(X):- X =[
           ].
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Function    :	BombExplode
 % Parameter 1 :	Board 
 % Parameter 2 :	x-axis of the bomb
@@ -601,25 +603,4 @@ displayLine([H|T]):-write(H), displayLine(T).
 display([]).
 display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
-
-% Function    : createMap
-% Objective   : Generate a sample of a map
-% Parameter 1 : The variable that will store the map
-% Return      : A game map
-
-%displayPlayerList([]).
-%displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Random %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-ia_random(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Offensive %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%ia_offensive()
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
