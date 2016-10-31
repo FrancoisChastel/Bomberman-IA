@@ -12,6 +12,7 @@
 :- use_module('../core/swish').
 :- use_module(library(plunit)).
 
+%:- initialization run_tests.
 
 %%%%%%%%%%%%%%%%    Verify that accessible is working properly
 %
@@ -377,4 +378,93 @@ test(danger2):- not( main:danger(1,3,[[[1,1,3,1],[4,3,3,2]],[[8,1,3,2],[1,5,3,1]
 
 
 :- end_tests(danger).
+
+:- begin_tests(safeAndAttainable).
+
+startTestsSafeAndAttainable:- retractall(main:bombsList(_)), retractall(main:board(_)), 
+assert(main:bombsList([[[1,3,5,2],[3,5,6,5]],[[7,3,5,1]]])),
+assert(main:board(
+ [
+          ['x','x','x','x','x','x','x','x','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','b','_','_','_','_','_','b','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','b','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','x','x','x','x','x','x','x','x']
+         ]
+
+)).
+
+terminusTestsSafeAndAttainable:- retractall(main:bombsList(_)), retractall(main:board(_)).
+
+%must be true
+test(safeAndAttainable1,
+	[
+	 setup(startTestsSafeAndAttainable),
+	 cleanup(terminusTestsSafeAndAttainable)
+	 
+	]
+	):- main:safeAndAttainable(2,1).
+
+%must be true
+test(safeAndAttainable2,
+	[
+	 setup(startTestsSafeAndAttainable),
+	 cleanup(terminusTestsSafeAndAttainable)
+	 
+	]
+	):- main:safeAndAttainable(7,1).
+
+
+%must be true
+test(safeAndAttainable3,
+	[
+	 setup(startTestsSafeAndAttainable),
+	 cleanup(terminusTestsSafeAndAttainable)
+	 
+	]
+	):- main:safeAndAttainable(5,3).
+
+%must be true
+test(safeAndAttainable4,
+	[
+	 setup(startTestsSafeAndAttainable),
+	 cleanup(terminusTestsSafeAndAttainable)
+	 
+	]
+	):- main:safeAndAttainable(1,6).
+
+%must be false
+test(safeAndAttainable5,
+	[
+	 setup(startTestsSafeAndAttainable),
+	 cleanup(terminusTestsSafeAndAttainable)
+	 
+	]
+	):- not(main:safeAndAttainable(3,3)).
+
+%must be false
+test(safeAndAttainable6,
+	[
+	 setup(startTestsSafeAndAttainable),
+	 cleanup(terminusTestsSafeAndAttainable)
+	 
+	]
+	):- not(main:safeAndAttainable(3,8)).
+
+
+%must be false
+test(safeAndAttainable7,
+	[
+	 setup(startTestsSafeAndAttainable),
+	 cleanup(terminusTestsSafeAndAttainable)
+	 
+	]
+	):- not(main:safeAndAttainable(2,2)).
+
+:- end_tests(safeAndAttainable).
+
 

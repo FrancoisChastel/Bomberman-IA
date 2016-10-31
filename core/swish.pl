@@ -10,6 +10,7 @@
 :- http_handler(root(init), init,[]).   % (1)
 :- http_handler(root(beat), beat,[]).
 
+
 %%%%%%%%%%%%%%%% Server Side %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 server(Port) :-           % (2)
