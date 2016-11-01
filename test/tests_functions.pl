@@ -1,10 +1,9 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Author(s):	N.Haim && F.Chastel (in eXtreme Programming)    %
-% Creation: 	21/09/2016                                 	%
-% Version : 	v0.1                                           	%
-% Description : Test the move functions that apply and verify	%
-%		that the move is possible			%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Author(s):	N.Haim && F.Chastel (in eXtreme Programming)    	%
+% Creation: 	21/09/2016                                 		%
+% Version : 	v0.1                                           		%
+% Description : Test all functions of swish.pl in core dir		%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Name of module
 :-module(test_module,[]).
@@ -467,4 +466,20 @@ test(safeAndAttainable7,
 
 :- end_tests(safeAndAttainable).
 
+%%%%%%%%%%%%%%%%%       Verify that lineExplode is working properly
+%
+:- begin_tests(lineExplode).
 
+%- common use case with an explosion going to the up, killing nobody but destroying a destructible block
+test(lineExplodeNormalUseCase) :- InitBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','o','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], 
+			InitPlayers = [[3, 4, 1, 1, 0]], Direction is 0, Xb is 3, Yb is 1, Eb is 2, 
+			NewBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','_','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], NewPlayers = [[3, 4, 1, 1, 0]],
+			main:lineExplode(InitBoard, Xb, Yb, Eb, InitPlayers, NewPlayers, NewBoard, NewPlayers).
+
+%- common use case with an explosion going to the right and a wall that stop the explosion
+test(lineExplodeNormalUseCase) :- InitBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','o','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], 
+                        InitPlayers = [[3, 4, 1, 1, 0]], Direction is 0, Xb is 3, Yb is 1, Eb is 2, 
+                        NewBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','_','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], NewPlayers = [[3, 4, 1, 1, 0]],
+                        main:lineExplode(InitBoard, Xb, Yb, Eb, InitPlayers, NewPlayers, NewBoard, NewPlayers).
+
+:- end_tests(lineExplode).
