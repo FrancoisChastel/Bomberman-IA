@@ -12,6 +12,9 @@
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_json)).
+:- use_module(library(http/json_convert)).
+:- use_module(library(http/json)).
+:- use_module(library(http/html_write)).
 :- use_module(library(http/http_parameters)).
 :- use_module(library(uri)).
 
@@ -26,14 +29,22 @@
 server(Port) :-           % (2)
 http_server(http_dispatch, [port(Port)]).
 
-init(_Request):-
-        retractall(board(_)),
+init(Request):-
+		http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
+		retractall(board(_)),
         retractall(playersList(_)),
         createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 1, 10, 0, 0], [7, 1, 10, 1, 0], [1, 7, 10, 2, 0], [7, 7, 10, 3, 0]])),
+    	assert(playersList([[1, 1, 10, 0, 0, -1], [7, 1, 10, 1, 0, -1], [1, 7, 10, 2, 0, -1], [7, 7, 10, 3, 0, -1]])),
         playersList(Players),
-        reply_json(json([board=Board,players=Players])).
+        string_chars(PlayersIAJSON,PlayersIA),
+        initPlayers(5,PlayersIA,Players,NewPlayersIA),
+        reply_json(json([board=Board,players=NewPlayersIA])).        
+        
+initPlayers(_,[],[_|_],[NewPlayersIA|_]).
+initPlayers(Index, [Hia|Tia],[H|T], [HTemp|TTemp]) :- updateList(Index,Hia,H,HTemp), initPlayers(Index,Tia,T,TTemp), !.
+initPlayers(_,[],_,NewPlayersIA).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

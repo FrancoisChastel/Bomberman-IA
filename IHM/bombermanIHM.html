@@ -12,22 +12,49 @@
     </head>
     <body>
         <h1>Bomberman</h1>
-		
-		<label>Server address</label><input type="textaera" id="servAddress">
+		<div style="margin: auto;width:400px">
+		<label>Server address<input type="textaera" id="servAddress"></label><br>
+        <label>Nombre de joueurs<input type="number" id="numberPlayers"></label><br>
+        <div id="players">
+            
+        </div>
+            
 		<input type="button" onClick="request()" value="Lancer le jeu"/>
-
+        </div>
 		<div id="result">-</div>
 
         <script>
             var players = [];
             var oldPlayers = [];
             var board = [];
+            
+            $('#numberPlayers').change(function()
+            {
+                var numberPlayers = $('#numberPlayers').val();
+                var contenu = '<div>';
+                for(var i=0;i<numberPlayers;i++)
+                {
+                    contenu+='<label>IA Joueur '+(i+1)+'<select class="playersIA"><option value="0">Random</option><option value="1">Aggressive</option></select></label><br>'
+                }
+                contenu+='</div>';
+                $('#players').html(contenu);
+            });
+            
+            
 			function request()
 			{
+                var playersIA="";
                 var url = $('#servAddress').val();
+                var selectsIA = document.getElementsByClassName('playersIA');
+                for(var i=0;i<selectsIA.length;i++)
+                {
+                    playersIA+=parseInt(selectsIA[i].selectedOptions[0].value);
+                }
                 $.ajax({
                     url:url+'init',
-                    type:'GET',
+                    type:'POST',
+                    crossDomain : true,
+                    data : {playersIA : playersIA},
                     dataType:'json',
                     success:function(data)
                     {
@@ -39,7 +66,6 @@
                     }
                 })
             }
-            
             function motor()
             {
                 //Appel ajax beat
