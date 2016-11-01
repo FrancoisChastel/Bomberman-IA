@@ -31,7 +31,7 @@ init(_Request):-
         retractall(playersList(_)),
         createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 1, 10, 0], [7, 1, 10, 1], [1, 7, 10, 2], [7, 7, 10, 3]])),
+    	assert(playersList([[1, 1, 10, 0, 0], [7, 1, 10, 1, 0], [1, 7, 10, 2, 0], [7, 7, 10, 3, 0]])),
         playersList(Players),
         reply_json(json([board=Board,players=Players])).
 
@@ -449,16 +449,14 @@ bombExplode(Board, Xb, Yb, Eb, ListOfPlayers, NewListOfPlayers, NewBoard) :-
 						lineExplode(TBoard1, Xb, Yb, Eb, TPlayers1, TPlayers2, TBoard2, 2),
 						lineExplode(TBoard2, Xb, Yb, Eb, TPlayers2, NewListOfPlayers, NewBoard, 3).
 %- Spread in a line of the explosion
-lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board, Players = NewPlayers.
+lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board, NewPlayers = Players.
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		 ( 	destructibleBlock(TElem)-> 
-				( destroyBlock(Board, Xb, Yb, NewBoard) );
-	  	  		( not(block(TElem))-> 
-					( TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), lineExplode(Board, TXb, TYb, TEb, Players, NewPlayers, NewBoard, Direction));
-					(NewBoard = Board, killPlayers(Xb, Yb, Players, NewPlayers))
-				)
-		).
-
+		destructibleBlock(TElem), destroyBlock(Board, Xb, Yb, NewBoard), NewPlayers = Players.
+lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
+		not(block(TElem)), TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), lineExplode(Board, TXb, TYb, TEb, Players, NewPlayers, NewBoard, Direction).
+lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
+		NewBoard = Board, killPlayers(Xb, Yb, Players, NewPlayers).
+		
 
 % Function    :	DestroyBlock
 % Objective   :	destroy a destructible block with the possibility of droping 
@@ -471,7 +469,7 @@ destroyBlock( Board, Xe, Ye, NewBoard):-
 		random(0, 5, Probability), (
 			 ( Probability is 0, capacite(Bonus), updateBoard(Board, Xe, Ye, Bonus, NewBoard));
 			 ( Probability is 1, puissance(Bonus), updateBoard(Board, Xe, Ye, Bonus, NewBoard)); 
-			 ( path(Path), updateBoard( Board, Xe, Ye, Path, NewBoard )).
+			 ( path(Path), updateBoard( Board, Xe, Ye, Path, NewBoard ))).
 
 
 % Function    :	KillPlayers
@@ -504,14 +502,13 @@ mouvementPlayer(NumPlayer, X, Y, NewX, NewY) :- playersList(List),
     assert(playersList(NewList)),
     updateBoard(NumPlayer,X, Y,NewX,NewY).
 
-%
-% replace a single cell in a list-of-lists
-% - Board is B
-% - The cell to be replaced at x coordinate (X)
-%   and the y coordinate (Y)
-% - The replacement value is Z
-% - the transformed list-of-lists (result) is R
-%
+% Function    :	replace
+% Objective   :	replace a signle celle in a matrix (list of list
+% Parameter 1 :	initial matrix	
+% Parameter 2 :	x-avis of the repalcement
+% Parameter 3 :	y-axis of the replacement
+% Parameter 4 :	value that will be set in replacement
+% Parameter 5 :	modified matri
 replace( B , X , Y , Z , R ) :- append(RP,[H|T],B),     % decompose the list-of-lists into a prefix, a list and a suffix
                                 length(RP,X) ,                 % check the prefix length
                                 append(CP,[_|CS],H) ,    % decompose that row into a prefix, a column and a suffix
@@ -525,13 +522,11 @@ assert(board(NewBoard)).
 
 % A Game turn
 play:-  playersList(ListPlayer),
-      playersBeat(0, ListPlayer),
-      displayBoard,
+      	playersBeat(0, ListPlayer),
+      	displayBoard,
         sleep(1),
         play.
 
-
-<<<<<<< HEAD
 beat(_Request) :-   playersList(ListPlayer),
                     playersBeat(0, ListPlayer),
                     reply_json(json([list=ListPlayer])).
@@ -541,7 +536,6 @@ beat(_Request) :-   playersList(ListPlayer),
 % Objective   :	Implant Bomb
 % Return      :	true -> Bomb implanted / false -> Bomb not implanted
 % Parameter 1 :	Index of player which implant the bomb
-
 implantBomb(PlayerIndex):-
     countTimeBomb(CountTimeBomb),
     playersList(ListPlayer),
