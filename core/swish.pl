@@ -30,7 +30,8 @@ server(Port) :-           % (2)
 http_server(http_dispatch, [port(Port)]).
 
 init(Request):-
-		http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
+		%http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
+		PlayersIAJSON = '143',
 		retractall(board(_)),
         retractall(playersList(_)),
         createMap(Board),
@@ -41,9 +42,8 @@ init(Request):-
         initPlayers(5,PlayersIA,Players,NewPlayersIA),
         reply_json(json([board=Board,players=NewPlayersIA])).        
         
-initPlayers(_,[],[_|_],[NewPlayersIA|_]).
-initPlayers(Index, [Hia|Tia],[H|T], [HTemp|TTemp]) :- updateList(Index,Hia,H,HTemp), initPlayers(Index,Tia,T,TTemp), !.
-initPlayers(_,[],_,NewPlayersIA).
+initPlayers(_,[],_,[]):- !.
+initPlayers(Index, [Hia|Tia],[H|T], [HTemp|TTemp]) :- updateList(Index,Hia,H,HTemp), initPlayers(Index,Tia,T,TTemp).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
