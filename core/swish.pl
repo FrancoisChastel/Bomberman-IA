@@ -431,7 +431,6 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
 %                  IndexTarget is IndexPlayer+1.
 %                  iaAggresive(IndexPlayer,IndexTarget,Bomb,Move).
 
->>>>>>> Features/IA_Offensive
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
