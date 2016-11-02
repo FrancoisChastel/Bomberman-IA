@@ -298,7 +298,7 @@ iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-
     board(Board),
     playersList(PlayerList),
     nth0(IndexPlayer,PlayerList,[X,Y,_,Power]),
-    checkTargetInList(IndexTarget,PlayerList,[TargetX,TargetY,_,_]),
+    checkNextTarget(IndexTarget,PlayerList,[TargetX,TargetY]),
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
@@ -329,8 +329,14 @@ iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-
 %------------------------------------------------  
 % Handle Overflow if IA Player is the last of PlayerList
 % If isnt last Then IndexTarget = IndexTarget else IndexTarget = 0 
-checkTargetInList(Index,List,Elem):-nth0(Index, List, Elem).
-checkTargetInList(_,List,Elem):-nth0(0, List, Elem).
+% Function             : checkNextTarget
+% Aim		       : Search next target to kick ass
+% Parameter 1          : Index of start
+% Parameter 2          : List
+% Parameter 3 / Return : Return X Y of a player not dead
+checkNextTarget(R,List,[X,Y]):- length(List,Longueur), R is Longueur -1 , checkNextTarget(-1,List,[X,Y]).
+checkNextTarget(Index,List,[X,Y]):- Search is Index + 1 , nth0(Search,List,[X,Y,_,_,0]);
+          (Search is Index + 1,checkNextTarget(Search,List,[X,Y])).
 %------------------------------------------------ 
 
 %Called By IaAggresive  
@@ -386,19 +392,6 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
 %                  IndexTarget is IndexPlayer+1.
 %                  iaAggresive(IndexPlayer,IndexTarget,Bomb,Move).
 
-
-
-createMap(X):- X =[
-          ['x','x','x','x','x','x','x','x','x'],
-          ['x','_','x','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','x','x','x','x','x','x','x','x']
-          ].
 
 
 
@@ -534,6 +527,19 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 %displayPlayerList([]).
 %displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
+
+createMap(X):- X =[
+          ['x','x','x','x','x','x','x','x','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','x','x','x','x','x','x','x','x']
+          ].
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
