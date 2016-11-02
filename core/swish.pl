@@ -121,8 +121,9 @@ movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
 applyMove(Index,X,Y):- 
 		playersList(ListPlayers),
 		nth0(Index, ListPlayers, InfoPlayer),
-		updateList(0, X, ListPlayers, TListPlayers),
-		updateList(1, Y, TListPlayers, NewListPlayers),
+		updateList(0, X, InfoPlayer, TInfoPlayer),
+		updateList(1, Y, TInfoPlayer, NewPlayer),
+		updateList(Index, NewPlayer, ListPlayers, NewListPlayers),
 		retract(playersList(ListPlayers)), 
 		assert(playersList(NewListPlayers)).
 
