@@ -561,10 +561,11 @@ implantBomb(PlayerIndex):-
 % Parameter 1 : Index of player
 % Parameter 2 : The list of player                    
 playersBeat(_,[]).
-playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power,Dead,Ia]|T]):-
+playersBeat(PlayerIndex,[[X, Y, _, _, _, IA]|T]):-
 	ia_random(X,Y,NewX,NewY),
-	applyMove(PlayerIndex, NewX, NewY);
-	N is PlayerIndex+1, playersBeat(N,T).
+	applyMove(PlayerIndex, NewX, NewY),
+	N is PlayerIndex+1, 
+	playersBeat(N,T).
 
 
 % Function             : backToSafePlace
