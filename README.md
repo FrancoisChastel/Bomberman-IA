@@ -18,7 +18,7 @@ bash test/test.sh
 If everything is ok, you must launch an Apache Server and a MySQL Server
 Then, you have to create a Virtual Host referencing Bomberman-IA/IHM/web/ with DocumentIndex 'app.php'
 
-Launch your browser and have a look at <yourHost>
+Launch your browser and have a look at 'yourHost'
 
 Then, launch your prolog server by typing
 
