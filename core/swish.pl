@@ -515,34 +515,6 @@ killPlayers( Xd, Yd, [Hp|Tp], [Hn|Tn]):- killPlayers( Xd, Yd, Tp, Tn),
 killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer). 
 
 
-% Function    : mouvementPlayer
-% Objective   : update player's list with new players coordinates
-% Parameter 1 : Number that identify the player
-% Parameter 2 : New x-axis for the player
-% Parameter 3 : New y-axis for the player
-mouvementPlayer(NumPlayer, X, Y, NewX, NewY) :- playersList(List),
-    updateListofListWithTwoFirstParameter(NumPlayer,List, NewList, NewX,NewY),
-    retract(playersList(List)),
-    assert(playersList(NewList)).
-
-% Function    :	replace
-% Objective   :	replace a signle celle in a matrix (list of list
-% Parameter 1 :	initial matrix	
-% Parameter 2 :	x-avis of the repalcement
-% Parameter 3 :	y-axis of the replacement
-% Parameter 4 :	value that will be set in replacement
-% Parameter 5 :	modified matri
-replace( B , X , Y , Z , R ) :- append(RP,[H|T],B),     % decompose the list-of-lists into a prefix, a list and a suffix
-                                length(RP,X) ,                 % check the prefix length
-                                append(CP,[_|CS],H) ,    % decompose that row into a prefix, a column and a suffix
-                                length(CP,Y) ,                 % check the prefix length: do we have the desired column?
-                                append(CP,[Z|CS],RN) , % if so, replace the column with its new value
-                                append(RP,[RN|T],R).   % and assemble the transformed list-of-lists
-
-updateBoard(NumPlayer, X, Y,NewX,NewY) :- board(Board), replace(Board,X,Y,'_',NewBoard1), replace(NewBoard1,NewX,NewY,NumPlayer,NewBoard),
-retract(board(Board)),
-assert(board(NewBoard)).
-
 % A Game turn
 play:-  playersList(ListPlayer),
       	playersBeat(0, ListPlayer),
@@ -582,9 +554,10 @@ implantBomb(PlayerIndex):-
 % Parameter 1 : Index of player
 % Parameter 2 : The list of player                    
 playersBeat(_,[]).
-playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power,Dead,Ia]|T]):-ia_random(X,Y,NewX,NewY),
-    mouvementPlayer(PlayerIndex,X, Y, NewX, NewY),
-    N is PlayerIndex+1, playersBeat(N,T).
+playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power,Dead,Ia]|T]):-
+	ia_random(X,Y,NewX,NewY),
+	appplyMove(PlayerIndex, NewX, NewY);
+	N is PlayerIndex+1, playersBeat(N,T).
 
 
 % Function             : backToSafePlace
@@ -638,14 +611,6 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Function    : createMap
-% Objective   : Generate a sample of a map
-% Parameter 1 : The variable that will store the map
-% Return      : A game map
-
-%displayPlayerList([]).
-%displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
-
 createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x'],
           ['x','_','_','_','_','_','_','_','x'],
@@ -663,4 +628,3 @@ createMap(X):- X =[
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Offensive %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%ia_offensive()
