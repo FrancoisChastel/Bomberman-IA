@@ -509,8 +509,7 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 mouvementPlayer(NumPlayer, X, Y, NewX, NewY) :- playersList(List),
     updateListofListWithTwoFirstParameter(NumPlayer,List, NewList, NewX,NewY),
     retract(playersList(List)),
-    assert(playersList(NewList)),
-    updateBoard(NumPlayer,X, Y,NewX,NewY).
+    assert(playersList(NewList)).
 
 % Function    :	replace
 % Objective   :	replace a signle celle in a matrix (list of list

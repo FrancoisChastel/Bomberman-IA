@@ -62,7 +62,7 @@
                         players = data['players'];
                         board = data['board'];
                         display();
-                        setTimeout(motor,1000);
+                        //setTimeout(motor,1000);
                     }
                 })
             }
@@ -78,7 +78,6 @@
                     {
                         oldPlayers = players;
                         players = data['list'];
-                        console.log(players);
                     }
                 });
                 display();
@@ -87,7 +86,7 @@
             
             function display()
             {
-                var contenu = '<table id="map">';
+                var contenu = '<table id="map" border="0" cellspacing="0" cellpadding="0">';
                 for(var i=0;i<board.length;i++)
                 {
                     contenu+='<tr>';
