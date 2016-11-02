@@ -339,7 +339,7 @@ iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-
     board(Board),
     playersList(PlayerList),
     nth0(IndexPlayer,PlayerList,[X,Y,_,Power]),
-    nth0(IndexTarget,PlayerList,[TargetX,TargetY,_,_]),
+    checkNextTarget(IndexTarget,PlayerList,[TargetX,TargetY]),
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
@@ -366,6 +366,20 @@ iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-
     ),
   !.
   
+% Called By IaAggresive
+%------------------------------------------------  
+% Handle Overflow if IA Player is the last of PlayerList
+% If isnt last Then IndexTarget = IndexTarget else IndexTarget = 0 
+% Function             : checkNextTarget
+% Aim		       : Search next target to kick ass
+% Parameter 1          : Index of start
+% Parameter 2          : List
+% Parameter 3 / Return : Return X Y of a player not dead
+checkNextTarget(R,List,[X,Y]):- length(List,Longueur), R is Longueur -1 , checkNextTarget(-1,List,[X,Y]).
+checkNextTarget(Index,List,[X,Y]):- Search is Index + 1 , nth0(Search,List,[X,Y,_,_,0]);
+          (Search is Index + 1,checkNextTarget(Search,List,[X,Y])).
+%------------------------------------------------ 
+
 %Called By IaAggresive  
 %------------------------------------------------  
 actionSafe(1,Bomb,Move,NextMove):-
@@ -410,18 +424,19 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
              writeln("Move").
 %------------------------------------------------  
 
-createMap(X):- X =[
-          ['x','x','x','x','x','x','x','x','x'],
-          ['x','_','x','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','x','x','x','x','x','x','x','x']
-          ].
+%                  assert(bombsList([[[1,8,5,3]]])),
+%                  assert(playersList([[1,1,1,5],[1,5,1,5]])),
+%                  createMap(Board),
+%                  assert(board(Board)), 
+%                  IndexTarget is IndexPlayer+1.
+%                  iaAggresive(IndexPlayer,IndexTarget,Bomb,Move).
 
+>>>>>>> Features/IA_Offensive
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%% IA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -623,3 +638,30 @@ display([]).
 display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Function    : createMap
+% Objective   : Generate a sample of a map
+% Parameter 1 : The variable that will store the map
+% Return      : A game map
+
+%displayPlayerList([]).
+%displayPlayerList([H|T]):-writeln(''), displayLine(H), displayPlayerList(T).
+
+createMap(X):- X =[
+          ['x','x','x','x','x','x','x','x','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','x','_','x','_','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
+          ['x','x','x','x','x','x','x','x','x']
+          ].
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Offensive %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%ia_offensive()
