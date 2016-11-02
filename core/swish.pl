@@ -35,9 +35,10 @@ init(Request):-
         retractall(playersList(_)),
         createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 1, 10, 0, 0, -1], [7, 1, 10, 1, 0, -1], [1, 7, 10, 2, 0, -1], [7, 7, 10, 3, 0, -1]])),
+    	assert(playersList([[1, 1, 10, 0, 0, -1], [1, 7, 10, 1, 0, -1], [7, 1, 10, 2, 0, -1], [7, 7, 10, 3, 0, -1]])),
         playersList(Players),
-        string_chars(PlayersIAJSON,PlayersIA),
+        string_chars(PlayersIAJSON,PlayersIAString),
+	convertIAInt(PlayersIAString,PlayersIA),
         initPlayers(5,PlayersIA,Players,NewPlayersIA),
         retractall(playersList(_)),
         assert(playersList(NewPlayersIA)),
@@ -46,7 +47,8 @@ init(Request):-
 initPlayers(_,[],_,[]):- !.
 initPlayers(Index, [Hia|Tia],[H|T], [HTemp|TTemp]) :- updateList(Index,Hia,H,HTemp), initPlayers(Index,Tia,T,TTemp).
 
-
+convertIAInt([],[]).
+convertIAInt([H|T],[HNum|TNum]):- atom_number(H,HNum), convertIAInt(T,TNum).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
