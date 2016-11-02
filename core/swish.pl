@@ -118,9 +118,13 @@ movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
 % Parameter 1 : Index of player in the list
 % Parameter 2 : New x-axis of the player
 % Parameter 3 : New y-axis of the player
-applyMove(Index,X,Y):- playersList(ListPlayers),nth0(Index, ListPlayers, InfoPlayer), nth0(2,InfoPlayer,MaxBomb),nth0(3,InfoPlayer,Power),
-                        updateList(Index,[X,Y,MaxBomb,Power],ListPlayers,NewListPlayers),
-			retract(playersList(ListPlayers)), assert(playersList(NewListPlayers)).
+applyMove(Index,X,Y):- 
+		playersList(ListPlayers),
+		nth0(Index, ListPlayers, InfoPlayer),
+		updateList(0, X, ListPlayers, TListPlayers),
+		updateList(1, Y, TListPlayers, NewListPlayers),
+		retract(playersList(ListPlayers)), 
+		assert(playersList(NewListPlayers)).
 
 
 % Function    : Accessible
