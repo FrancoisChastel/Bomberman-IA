@@ -528,21 +528,50 @@ killPlayers( Xd, Yd, [Hp|Tp], [Hn|Tn]):- killPlayers( Xd, Yd, Tp, Tn),
 % Parameter 2 :	killed player
 killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer). 
 
-
-% A Game turn
-play:-  playersList(ListPlayer),
-      	playersBeat(0, ListPlayer),
-      	displayBoard,
-        sleep(1),
-        play.
-
-
-turn(_Request) :-   
+%- A game turn
+turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
-	playersBeat(0, Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs),
+	playersBeat(0, Board, ListPlayers, ListBombs, TBoard, TListPlayers, TListBombs),
+	managementBomb(0, TBoard, TListPlayers, TListBombs, NewBoard, NewListPlayers, NEwListBombs),
 	setModel(NewBoard, NewListPlayers, NewListBombs),
-      	reply_json(json([list=ListPlayers])).
+      	reply_json(json([players=ListPlayers, bombs=NewListBombs, board=NewBoard])).
 
+% Function    :	managementBomb
+% Objective   :	manage the bomb 
+% Parameter 1 :	Board
+% Parameter 2 :	List players
+% Parameter 3 :	List bombs
+% Parameter 4 :	New board
+% Parameter 5 :	New list of players
+% Parameter 6 :	New list of bombs
+% Parameter 7 : Recursive list param
+managementBomb(_, NewBoard, NewPlayers, NewBombs,NewBoard,NewPlayers,NewBombs,[]). % Stops when RecurParam is empty
+managementBomb(IndexPlayer, Board, ListPlayers, ListBombs, NewBoard, NewPlayers, NewBombs,[CurrPlayer|RecurParamPlayerList]):-
+	checkBombsOfPlayer(0, IndexPlayer, Board, ListPlayers, ListBombs, TBoard, TPlayers, TBombsOfPlayer, ListBombs),
+	updateList(IndexPlayer, TBombsOfPlayer, ListBombs, TBombs),
+	NewIndexPlayer is IndexPlayer+1,
+	managementBomb(NewIndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs, RecurParamPlayerList).
+
+%- check bombs for player
+checkBombsOfPlayer(_, _, NewBoard, NewPlayers, NewBombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[]).
+checkBombsOfPlayer(IndexBomb, IndexPlayer, Board, Players, BombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[CurrBomb|RecurParamBombList]):-
+	nth0(2, CurrBomb, Counter),
+	checkBombExplosion( IndexBomb, Board, Players, CurrBomb, BombsOfPlayer, TBoard, TPlayers, TBombs, Counter),
+	NewIndexBomb is IndexBomb +1,
+	checkBombsOfPlayer( NewIndexBomb, IndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs,RecurParamBombList).
+%- check explosion of the bomb
+checkBombExplosion( _, Board, ListPlayers, Bomb, BombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer, 0):-
+	nth0( 0, Bomb, Xb),
+	nth0( 1, Bomb, Yb),
+	nth0( 3, Bomb, Eb),
+	bombExplode( Board, Xb, Yb, Eb, ListPlayers, NewPlayers, NewBoard),
+	delete(BombsOfPlayer, Bomb, NewBombsOfPlayer), !.
+
+checkBombExplosion( IndexBomb, _, _, Bomb, BombsOfPlayer, _, _, NewBombsOfPlayer, _):-
+	nth0( 2, Bomb, CountTimeBomb),
+	NewCountTimeBomb is CountTimeBomb-1, 
+	updateList( 2, NewCountTimeBomb, Bomb, NewBomb),
+	updateList( Indexbomb, NewBomb, BombsOfPlayer, NewBombsOfPlayer), !.
 
 % Function    :	GetModel
 % Objective   :	Return the get model of datas that will be use in the game
@@ -565,8 +594,8 @@ setModel( NewBoard, NewListOfPlayers, NewListOfBombs):-
 	retract( playersList(_)),
 	retract( bombsList(_)),
 	assert( board(NewBoard)),
-	assert( playersList(NewListOfPlayers),
-	assert( bombsList(NewListOfBombs).
+	assert( playersList(NewListOfPlayers)),
+	assert( bombsList(NewListOfBombs)).
 
 
 % Function    :	implantBomb
@@ -578,12 +607,13 @@ implantBomb(PlayerIndex, Board, [X,Y,NbMaxBomb,PowerPlayer], ListAllBomb, NewLis
     	nth0(PlayerIndex, ListAllBomb, ListBombImplantByPlayer),
     	length(ListBombImplantByPlayer,Length),
 	plantBomb((Length<NbMaxBomb),ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer,ListAllBomb,NewListAllBomb), !.
-
+%- planBomb
 plantBomb(0,_,_,_,_,_,_,ListAllBomb,ListAllBomb):- !.
 plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex, ListAllBomb, NewListAllBomb):- 
    	append(ListBombImplantByPlayer, [[X,Y,CountTimeBomb,PowerPlayer]], NewListBombImplantByPlayer),
     	updateListofListWithOneParameter(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
 	updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb), !.
+
 
 % Function    : playersBeat
 % Objective   : Instant T movement all players
@@ -666,18 +696,15 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
-          ['x','_','x','_','x','_','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','_','o','o','o','_','_','x'],
+          ['x','_','x','o','x','o','x','_','x'],
+          ['x','o','o','o','o','o','o','o','x'],
+          ['x','o','x','o','x','o','x','o','x'],
+          ['x','o','o','o','o','o','o','o','x'],
+          ['x','_','x','o','x','o','x','_','x'],
+          ['x','_','_','o','o','o','_','_','x'],
           ['x','x','x','x','x','x','x','x','x']
           ].
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% IA_Offensive %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
