@@ -39,6 +39,8 @@ init(Request):-
         playersList(Players),
         string_chars(PlayersIAJSON,PlayersIA),
         initPlayers(5,PlayersIA,Players,NewPlayersIA),
+        retractall(playersList(_)),
+        assert(playersList(NewPlayersIA)),
         reply_json(json([board=Board,players=NewPlayersIA])).        
         
 initPlayers(_,[],_,[]):- !.
@@ -556,7 +558,7 @@ implantBomb(PlayerIndex):-
 playersBeat(_,[]).
 playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power,Dead,Ia]|T]):-
 	ia_random(X,Y,NewX,NewY),
-	appplyMove(PlayerIndex, NewX, NewY);
+	applyMove(PlayerIndex, NewX, NewY);
 	N is PlayerIndex+1, playersBeat(N,T).
 
 
