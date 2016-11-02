@@ -668,20 +668,22 @@ turn(_Request) :-
 % Parameter 5 :	New list of players
 % Parameter 6 :	New list of bombs
 % Parameter 7 : Recursive list param
-managementBomb(_, NewBoard, NewPlayers, NewBombs,NewBoard,NewPlayers,NewBombs,[]). % Stops when RecurParam is empty
+managementBomb(_, NewBoard, NewPlayers, NewBombs,NewBoard,NewPlayers,NewBombs,[]):- !. % Stops when RecurParam is empty
 managementBomb(IndexPlayer, Board, ListPlayers, ListBombs, NewBoard, NewPlayers, NewBombs,[CurrPlayer|RecurParamPlayerList]):-
-	checkBombsOfPlayer(0, IndexPlayer, Board, ListPlayers, ListBombs, TBoard, TPlayers, TBombsOfPlayer, ListBombs),
+	nth0(IndexPlayer, ListBombs, ListBombsOfPlayer),
+	checkBombsOfPlayer(0, IndexPlayer, Board, ListPlayers, ListBombsOfPlayer, TBoard, TPlayers, TBombsOfPlayer, ListBombsOfPlayer),
 	updateList(IndexPlayer, TBombsOfPlayer, ListBombs, TBombs),
 	NewIndexPlayer is IndexPlayer+1,
-	managementBomb(NewIndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs, RecurParamPlayerList).
+	managementBomb(NewIndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs, RecurParamPlayerList), !.
 
 %- check bombs for player
-checkBombsOfPlayer(_, _, NewBoard, NewPlayers, NewBombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[]).
+checkBombsOfPlayer(_, _, NewBoard, NewPlayers, NewBombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[]):- !.
 checkBombsOfPlayer(IndexBomb, IndexPlayer, Board, Players, BombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[CurrBomb|RecurParamBombList]):-
 	nth0(2, CurrBomb, Counter),
 	checkBombExplosion( IndexBomb, Board, Players, CurrBomb, BombsOfPlayer, TBoard, TPlayers, TBombs, Counter),
 	NewIndexBomb is IndexBomb +1,
-	checkBombsOfPlayer( NewIndexBomb, IndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs,RecurParamBombList).
+	checkBombsOfPlayer( NewIndexBomb, IndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombsOfPlayer,RecurParamBombList).
+
 %- check explosion of the bomb
 checkBombExplosion( _, Board, ListPlayers, Bomb, BombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer, 0):-
 	nth0( 0, Bomb, Xb),
@@ -690,7 +692,7 @@ checkBombExplosion( _, Board, ListPlayers, Bomb, BombsOfPlayer, NewBoard, NewPla
 	bombExplode( Board, Xb, Yb, Eb, ListPlayers, NewPlayers, NewBoard),
 	delete(BombsOfPlayer, Bomb, NewBombsOfPlayer), !.
 
-checkBombExplosion( IndexBomb, _, _, Bomb, BombsOfPlayer, _, _, NewBombsOfPlayer, _):-
+checkBombExplosion( IndexBomb, NewBoard, NewListPlayers, Bomb, BombsOfPlayer, NewBoard, NewListPlayers, NewBombsOfPlayer, _):-
 	nth0( 2, Bomb, CountTimeBomb),
 	NewCountTimeBomb is CountTimeBomb-1, 
 	updateList( 2, NewCountTimeBomb, Bomb, NewBomb),
