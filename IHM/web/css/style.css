@@ -1,0 +1,31 @@
+table,tr,td
+{
+    padding:0px;
+    margin-top:0px;
+    margin-bottom:0px;
+    margin-left:auto;
+    margin-right:auto;
+    border-spacing: 0;
+    border-collapse: collapse;
+    border: none;
+}
+tr,td,img{
+    display:flex;
+}
+body
+{
+    border-collapse: collapse;
+}
+
+
+#block
+{
+    width:64px;
+    height:64px;
+}
+
+#betty
+{
+    left:0px;
+    width:48px;
+}
