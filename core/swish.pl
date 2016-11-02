@@ -30,8 +30,7 @@ server(Port) :-           % (2)
 http_server(http_dispatch, [port(Port)]).
 
 init(Request):-
-		%http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
-		PlayersIAJSON = '143',
+		http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
 		retractall(board(_)),
         retractall(playersList(_)),
         createMap(Board),
@@ -574,7 +573,7 @@ implantBomb(PlayerIndex):-
 % Parameter 1 : Index of player
 % Parameter 2 : The list of player                    
 playersBeat(_,[]).
-playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power]|T]):-ia_random(X,Y,NewX,NewY),
+playersBeat(PlayerIndex,[[X,Y,NbMaxBomb,Power,Dead,Ia]|T]):-ia_random(X,Y,NewX,NewY),
     mouvementPlayer(PlayerIndex,X, Y, NewX, NewY),
     N is PlayerIndex+1, playersBeat(N,T).
 
