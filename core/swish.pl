@@ -30,8 +30,8 @@ server(Port) :-           % (2)
 http_server(http_dispatch, [port(Port)]).
 
 init(Request):-
-		http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
-		retractall(board(_)),
+	http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
+	retractall(board(_)),
         retractall(playersList(_)),
         createMap(Board),
     	assert(board(Board)),
@@ -42,10 +42,15 @@ init(Request):-
         initPlayers(5,PlayersIA,Players,NewPlayersIA),
         retractall(playersList(_)),
         assert(playersList(NewPlayersIA)),
+	initBombs(NewPlayersIA,Bombs),
+	assert(bombsList(Bombs)),
         reply_json(json([board=Board,players=NewPlayersIA])).        
         
 initPlayers(_,[],_,[]):- !.
 initPlayers(Index, [Hia|Tia],[H|T], [HTemp|TTemp]) :- updateList(Index,Hia,H,HTemp), initPlayers(Index,Tia,T,TTemp).
+
+initBombs([],[]).
+initBombs([H|P], [HBomb|TBomb]) :- HBomb = [], initBombs(P,TBomb). 
 
 convertIAInt([],[]).
 convertIAInt([H|T],[HNum|TNum]):- atom_number(H,HNum), convertIAInt(T,TNum).
@@ -324,7 +329,7 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 
 %%%%%%%%%%%%%%%% IA RANDOM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ia_random(X,Y,NewX,NewY):-repeat, random_between(0,4,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
+ia_random(X,Y,NewX,NewY):-repeat, random_between(-1,3,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -585,7 +590,7 @@ plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex
 % Parameter 1 : Index of player
 % Parameter 2 : The list of player                    
 playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
-	nth0(6, Player, IA),
+	nth0(5, Player, IA),
 	ia(IA, Player, Board, ListBombs, Bomb, Direction),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
