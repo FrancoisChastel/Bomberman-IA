@@ -15,11 +15,19 @@ After this, you can have execute the tests by going in the dir test and executin
 cd Bomberman-IA
 bash test/test.sh
 ```
+If everything is ok, you must launch an Apache Server and a MySQL Server
+Then, you have to create a Virtual Host referencing Bomberman-IA/IHM/web/ with DocumentIndex 'app.php'
 
-If everything is ok, you can now run our bomberman by executing run.sh in the core dir, and after that open a browser and have a look on [localhost (port: 8080)](http://localhost:8080)
+Launch your browser and have a look at 'yourHost'
+
+Then, launch your prolog server by typing
+
 ```shell
 bash core/run.sh
 ```
+
+To finish, write 'http://localhost:8080/' in Server Adress field and choose the number of players you want (max 4)
+
 Now you can play ;) 
 
 ## Authors
