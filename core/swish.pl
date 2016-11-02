@@ -444,6 +444,121 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
 
 %%%%%%%%%%%%%% IA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+ia(2,IndexPlayer,ListPlayer,Board,BombList,NextMove) :-
+    nth0(IndexPlayer,PlayerList,[X,Y,_,_,_,_]),
+    createPonderatedList(X,Y,Board,BombList,PlayerList,PonderatedList),
+    max_list(PonderatedList,Max),
+    nth0(Choice,PonderatedList,Max),
+    NextMove is Choice.
+
+
+
+%----------------
+%Function used by IA
+
+branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
+    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,ValueGlobal).
+
+branch(It,X,Y,ValueGlobal) :-
+
+    Index is It+1,
+    branch(Index,X,Y,Value0),
+    Y0 is Y-1,branch(Index,X,Y0,Value1),
+    X0 is X+1,branch(Index,X0,Y,Value2),
+    Y1 is Y+1,branch(Index,X,Y1,Value3),
+    X1 is X-1,branch(Index,X1,Y,Value4),
+    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue),
+    ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
+
+
+createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
+    A is Y-1,
+    B is X+1,
+    C is Y+1,
+    D is X-1,
+    Branch(0,X,Y,Board,BombList,PlayerList,Value1),
+    Branch(0,X,A,Board,BombList,PlayerList,Value2),
+    Branch(0,B,Y,Board,BombList,PlayerList,Value3),
+    Branch(0,X,C,Board,BombList,PlayerList,Value4),
+    Branch(0,Ds,Y,Board,BombList,PlayerList,Value5),
+    List = [Value1,Value2,Value3,Value4,Value5].
+
+
+% Function 			   : rapprochement
+% Aim      			   : know if the player is closer the point
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : PlayerList
+% Parameter 4 / Return : Number way available
+rapprochement(_,_,[],[]).
+rapprochement(XTarget,YTarget,[[XEnnemy,YEnnemy|_]|T],[ValRapprochement|TailRapprochement]):-
+rapprochement(XTarget,YTarget,T,TailRapprochement), moreCloser(XTarget,YTarget,XEnnemy,YEnnemy,ValRapprochement).
+
+moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,[Distance]), Val is 1 - Distance/16.
+
+
+
+% Function 			   : dangerWeight
+% Aim      			   : to weight the danger of square
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : List of bombs
+% Parameter 4 / Return : Value of weight
+
+dangerWeight(X,Y,ListBomb,1):- danger(X,Y,ListBomb).
+dangerWeight(_,_,_,0).
+
+
+% Function 			   : nbChoiceAvailable
+% Aim      			   : Count way available
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : Board
+% Parameter 4 / Return : Number way available
+nbChoiceAvailable(X,Y,Board,Val):-
+X1 is X+1, availableWeight(X1,Y,Board,Value1),
+Y1 is Y-1, availableWeight(X,Y1,Board,Value2),
+X2 is X-1, availableWeight(X2,Y,Board,Value3),
+Y2 is Y+1, availableWeight(X,Y2,Board,Value4),
+Val is Value1 + Value2 + Value3 + Value4.
+
+
+% Function 			   : availableWeight
+% Aim      			   : to weight available way
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : Board
+% Parameter 4 / Return : Value of weight
+availableWeight(X,Y,Board,1):- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
+availableWeight(_,_,_,0).
+
+
+%totalBonus([],_,_).
+%totalBonus([[X,Y]|T],Board,Val):- bonus(X,Y,Board,RetourBonus), TotalBonus(T,Board,ValRetour), Val = ValRetour + RetourBonus.
+
+
+
+% Function 			   : bonusWeight
+% Aim      			   : to weight bonus
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : Board
+% Parameter 4 / Return : Value of weight
+bonusWeight(X,Y,Board,1):- nth0(Y, Board, Line), nth0(X, Line, Square), bonus(Square).
+bonusWeight(_,_,_,0).
+
+
+CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue):-
+    bonusWeight(X,Y,Board,Value0),
+    nbChoiceAvailable(X,Y,Board,Value1),
+    dangerWeight(X,Y,Board,Value2),
+    rapprochement(X,Y,PlayerList,List),
+    sum_list(List,Value3),
+    WheightValue is Value0 + Value1 + Value2 + Value3.
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
