@@ -265,13 +265,14 @@
         {
             var contenu = '<h2>Information des joueurs</h2>';
             contenu += '<table style="width:90%;margin: auto" class="table table-hover">';
-            contenu+='<thead><tr><th>Joueur</th><th>X</th><th>Y</th><th>Puissance</th><th>En vie</th><th>IA</th></tr></thead><tbody>';
+            contenu+='<thead><tr><th>Joueur</th><th>X</th><th>Y</th><th>Bombes Max</th><th>Puissance</th><th>En vie</th><th>IA</th></tr></thead><tbody>';
             for(var i=0;i<players.length;i++)
             {
                 contenu+='<tr>';
                 contenu+='<td>Joueur '+(i+1)+'</td>';
                 contenu+='<td>'+players[i][0]+'</td>';
                 contenu+='<td>'+players[i][1]+'</td>';
+                contenu+='<td>'+players[i][2]+'</td>';
                 contenu+='<td>'+players[i][3]+'</td>';
                 switch (players[i][4])
                 {
@@ -353,9 +354,30 @@
         
         function gameOver()
         {
+            var numberOfDeads = 0;
             for(var i=0;i<players.length;i++)
             {
-                
+                if(players[i][4]==1)
+                {
+                    numberOfDeads++;
+                }
+            }
+            if(numberOfDeads==players.length-1)
+            {
+                for(var i=0;i<players.length;i++)
+                {
+                    if(players[i][4]==0)
+                    {
+                        return players[i];
+                    }
+                }
+            }
+            else if(numberOfDeads==players.length)
+            {
+                for (var i=0;i<oldOccupants.length;i++)
+                {
+                    
+                }
             }
         }
 

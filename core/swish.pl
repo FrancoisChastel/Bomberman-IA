@@ -395,8 +395,8 @@ ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 %        - 2 : down
 %        - 3 : left
 ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
-    nth0(IndexPlayer,PlayerList,[X,Y,_,Power,_,_]),
-    checkNextTarget(IndexPlayer,PlayerList,[TargetX,TargetY]),
+    nth0(IndexPlayer,PlayersList,[X,Y,_,Power,_,_]),
+    checkNextTarget(IndexPlayer,PlayersList,[TargetX,TargetY]),
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
@@ -526,9 +526,9 @@ checkCloseObject(Board,BombList,X,Y,Find,NextMove):-
 checkCloseObject(Board,BombList,X,Y,Find,NextMove):- 
     p_move(X,Y,NX,NY),
     p_move(NX,NY,TempX,TempY),
-    accessible(Board,X,Y),
-    danger(X,Y,BombList),
-    p_BonusSquare(Board,X,Y),
+    accessible(Board,TempX,TempY),
+    danger(TempX,TempY,BombList),
+    p_BonusSquare(Board,TempX,TempY),
     move(NextMove,X,Y,NX,NY),
     Find = 1.
 checkCloseObject(_,_,_,_,0,_).
