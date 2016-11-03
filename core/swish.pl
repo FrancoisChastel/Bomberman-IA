@@ -493,9 +493,10 @@ ia(2,IndexPlayer,ListPlayer,Board,BombList,NextMove) :-
 %Function used by IA
 
 branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
-    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,ValueGlobal).
+    correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,Value),
+    ValueGlobal is Value.
 
-branch(It,X,Y,ValueGlobal) :-
+branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
 
     Index is It+1,
     branch(Index,X,Y,Value0),
@@ -503,7 +504,7 @@ branch(It,X,Y,ValueGlobal) :-
     X0 is X+1,branch(Index,X0,Y,Value2),
     Y1 is Y+1,branch(Index,X,Y1,Value3),
     X1 is X-1,branch(Index,X1,Y,Value4),
-    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue),
+    correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue),
     ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
 
 
@@ -512,11 +513,11 @@ createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
     B is X+1,
     C is Y+1,
     D is X-1,
-    Branch(0,X,Y,Board,BombList,PlayerList,Value1),
-    Branch(0,X,A,Board,BombList,PlayerList,Value2),
-    Branch(0,B,Y,Board,BombList,PlayerList,Value3),
-    Branch(0,X,C,Board,BombList,PlayerList,Value4),
-    Branch(0,Ds,Y,Board,BombList,PlayerList,Value5),
+    branch(0,X,Y,Board,BombList,PlayerList,Value1),
+    branch(0,X,A,Board,BombList,PlayerList,Value2),
+    branch(0,B,Y,Board,BombList,PlayerList,Value3),
+    branch(0,X,C,Board,BombList,PlayerList,Value4),
+    branch(0,Ds,Y,Board,BombList,PlayerList,Value5),
     List = [Value1,Value2,Value3,Value4,Value5].
 
 
@@ -591,14 +592,15 @@ bonusWeight(_,_,_,0).
 
 isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line;Square),wall(Square).
 isWall(_,_,_,0).
-CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue):-
-    bonusWeight(X,Y,Board,Value0),
-    nbChoiceAvailable(X,Y,Board,Value1),
-    dangerWeight(X,Y,Board,Value2),
-    isWall(X,Y,Board,Value4),
-    rapprochement(X,Y,PlayerList,List),
-    sum_list(List,Value3),
-    WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
+
+correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue):-
+bonusWeight(X,Y,Board,Value0),
+nbChoiceAvailable(X,Y,Board,Value1),
+dangerWeight(X,Y,Board,Value2),
+isWall(X,Y,Board,Value4),
+rapprochement(X,Y,PlayerList,List),
+sum_list(List,Value3),
+WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
 
 
 
