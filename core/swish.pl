@@ -539,6 +539,11 @@ bombWorthIt(_,_,_,0).
 % Parameter 3 		   : PlayerList
 % Parameter 4 / Return : Number way available
 rapprochement(_,_,[],[]).
+
+rapprochement(XTarget,YTarget,[[XTarget,YTarget|_]|T],TailRapprochement):-
+rapprochement(XTarget,YTarget,T,TailRapprochement).
+
+
 rapprochement(XTarget,YTarget,[[XEnnemy,YEnnemy|_]|T],[ValRapprochement|TailRapprochement]):-
 rapprochement(XTarget,YTarget,T,TailRapprochement), moreCloser(XTarget,YTarget,XEnnemy,YEnnemy,ValRapprochement).
 
