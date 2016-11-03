@@ -712,7 +712,7 @@ turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
 	bombsManagement(Board, ListPlayers, ListBombs, TBoard, TListPlayers, TListBombs),
 	playersBeat(TBoard, TListPlayers, TListBombs, TTBoard, TTListPlayers, NewListBombs),
-	evaluateBonus(TTBoard, TTListPlayers, NewBoard, NewListPlayers 
+	evaluateBonus(TTBoard, TTListPlayers, NewBoard, NewListPlayers), 
 	setModel(NewBoard, NewListPlayers, NewListBombs),
 	reply_json(json([board=NewBoard,players=NewListPlayers,bombs=NewListBombs])).
 
