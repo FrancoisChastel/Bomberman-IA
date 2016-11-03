@@ -840,7 +840,7 @@ plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex
 % Objective   : Instant T movement all players
 % Parameter 1 : Index of player
 % Parameter 2 : The list of player
-<<<<<<< HEAD
+
 playersBeat(NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
 playersBeat(Board, Players, ListBombs, NewBoard, NewPlayers, NewListBombs):- 
 	playersAction(Board, Players, Bobms, ActionsPlayers),
