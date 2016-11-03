@@ -35,7 +35,7 @@ init(Request):-
         retractall(playersList(_)),
         createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 1, 10, 0, 0, -1], [1, 7, 10, 1, 0, -1], [7, 1, 10, 2, 0, -1], [7, 7, 10, 3, 0, -1]])),
+    	assert(playersList([[1, 1, 1, 2, 0, -1], [1, 7, 1, 2, 0, -1], [7, 1, 1, 2, 0, -1], [7, 7, 1, 2, 0, -1]])),
         playersList(Players),
         string_chars(PlayersIAJSON,PlayersIAString),
 	convertIAInt(PlayersIAString,PlayersIA),
@@ -399,7 +399,7 @@ iaAggresive(IndexPlayer,Bomb,NextMove):-
               % Target in line of Fire
               % For the next version implement better move after drop bomb
               Bomb = 1,
-              NextMove = -1
+              escapeBomb(X,Y,NextMove)
             );( 
               % No Ennemi in Line of Fire
               checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
@@ -409,7 +409,9 @@ iaAggresive(IndexPlayer,Bomb,NextMove):-
         )
     ),
   !.
-  
+ 
+escapeBomb(X,Y,NextMove):-repeat, board(Board), random_between(0,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
+ 
 % Called By IaAggresive
 %------------------------------------------------  
 % Handle Overflow if IA Player is the last of PlayerList
@@ -455,10 +457,10 @@ actionAnalyseAllSquare(_,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove):-
     
 %Called By ActionAnalyseAllSquare  
 %------------------------------------------------  
-actionSquare('o',_,_,_,_,Bomb,NextMove):-
+actionSquare('o',X,Y,_,_,Bomb,NextMove):-
       Bomb = 1,
             %Find Safe Square next turn...
-            NextMove = 0.
+            escapeBomb(X,Y,NextMove).
 actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
          Bomb = 0,
              move(NextMove,X,Y,NextX,NextY).
@@ -662,10 +664,10 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 %- A game turn
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
-	playersBeat(0, Board, ListPlayers, ListBombs, TBoard, TListPlayers, TListBombs),
-	managementBomb(0, TBoard, TListPlayers, TListBombs, NewBoard, NewListPlayers, NewListBombs),
-	setModel(NewBoard, NewListPlayers, NewListBombs),
-      	reply_json(json([players=NewListPlayers, bombs=NewListBombs, board=NewBoard])).
+	managementBomb(0, Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs, ListPlayers),
+	playersBeat(0, NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
+	setModel(TBoard, TListPlayers, TListBombs),
+      	reply_json(json([players=TListPlayers, bombs=TListBombs, board=TBoard])).
 
 % Function    :	managementBomb
 % Objective   :	manage the bomb 
@@ -810,10 +812,10 @@ functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
     append(N,[[X,Y]],N2),
     (   
   ( not(danger(X,Y,ListBomb)) , Safe = 1) ;
-  ( Ydep is Y-1 , backToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
-  ( Xdep is X-1, backToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
-  ( Ydep is Y+1, backToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
-  ( Xdep is X+1, backToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 )
+  ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
+  ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
+  ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+  ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 )
     )
     ;   Safe = 0.
 
@@ -838,11 +840,11 @@ createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x'],
           ['x','_','_','_','_','_','_','_','x'],
           ['x','_','x','o','x','o','x','_','x'],
-          ['x','_','o','o','o','o','o','_','x'],
+          ['x','o','o','o','o','o','o','_','x'],
+          ['x','o','x','o','x','o','x','_','x'],
+          ['x','o','o','o','o','o','o','_','x'],
           ['x','_','x','o','x','o','x','_','x'],
-          ['x','_','o','o','o','o','o','_','x'],
-          ['x','_','x','o','x','o','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','_','o','o','o','_','_','x'],
           ['x','x','x','x','x','x','x','x','x']
           ].
 

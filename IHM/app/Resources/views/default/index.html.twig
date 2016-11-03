@@ -70,7 +70,7 @@
                     players = data['players'];
                     board = data['board'];
                     display();
-                    setTimeout(motor,1000);
+                    setTimeout(motor,2000);
                 }
             })
         }
@@ -91,7 +91,7 @@
                     if(!gameOver)
                     {
                         display();
-                        setTimeout(motor,1000);
+                        setTimeout(motor,2000);
                     }
                     else 
                     {
@@ -128,7 +128,7 @@
                         var filled = false;
                         for(var n=0;n<occupants.length;n++)
                         {
-                            if(i==occupants[n][0] && j==occupants[n][1])
+                            if(i==occupants[n][1] && j==occupants[n][0])
                             {
                                 filled = true;
                                 contenu+='<div style="position: relative; left: 0; top: 0;">';
@@ -230,7 +230,7 @@
             {
                 for(var j=0;j<bombs[i].length;j++)
                 {
-                    if(x==bombs[i][j][0] && y==bombs[i][j][0])
+                    if(x==bombs[i][j][1] && y==bombs[i][j][0])
                     {
                         return true;
                     }
