@@ -132,6 +132,18 @@ applyMove([X,Y|T], Direction, NewPlayer):-
 		updateList(0, NewX, [X,Y|T], TInfoPlayer),
 		updateList(1, NewY, TInfoPlayer, NewPlayer), !.		
 
+% Function    :	evaluateBonus
+% Objective   :	give to the players and update the board
+% Parameter 1 :	Board
+% Parameter 2 :	List of players
+% Parameter 3 :	New Board
+% Parameter 4 :	New players
+evaluateBonus(NewBoard, [], NewBoard, []):- !.
+evaluateBonus(Board, [Hp|Tp], NewBoard, [Hn|Tn]):-
+	evaluateBonus(Board, Tp, TBoard, Tn),
+	obtainBonus( TBoard, Hp, NewBoard, Hn), !.
+evaluateBonus(NewBoard, [], NewBoard, []):- !.
+
 % Function    :	ObtainBonus
 % Objective   :	Get if possible a bonus
 % Parameter 1 :	Board
@@ -146,7 +158,9 @@ obtainBonus( Board, Player, NewBoard, NewPlayer):-
 	capacite(TElem),
 	nth0(2, Player, Capacite),
 	NewCapacite is Capacite+1,
-	updateList(2, Player, NewCapacite).
+	path(Path),
+	updateBoard(Board, X, Y, Path, NewBoard),
+	updateList(2,NewCapacite, Player, NewPlayer), !.
 obtainBonus( Board, Player, NewBoard, NewPlayer):-
 	nth0(0, Player, X),
 	nth0(1, Player, Y),
@@ -154,9 +168,11 @@ obtainBonus( Board, Player, NewBoard, NewPlayer):-
 	nth0(X, TLine, TElem),
 	puissance(TElem),
 	nth0(3, Player, Puissance),
+	path(Path),
+	updateBoard(Board, X, Y, Path, NewBoard),
 	NewPuissance is Puissance+1,
-	updateList(3, Player, NewPuissance).
-obtainBonus( NewBoard, NewPlayer, NewBoard, NewPlayer).
+	updateList(3, NewPuissance, Player, NewPlayer), !.
+obtainBonus( NewBoard, NewPlayer, NewBoard, NewPlayer):- !.
 
 
 		
@@ -694,9 +710,10 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 %- A game turn
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
-	bombsManagement(Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs),
-	playersBeat(NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
-	setModel(TBoard, TListPlayers, TListBombs),
+	bombsManagement(Board, ListPlayers, ListBombs, TBoard, TListPlayers, TListBombs),
+	playersBeat(TBoard, TListPlayers, TListBombs, TTBoard, TTListPlayers, NewListBombs),
+	evaluateBonus(TTBoard, TTListPlayers, NewBoard, NewListPlayers 
+	setModel(NewBoard, NewListPlayers, NewListBombs),
 	reply_json(json([board=NewBoard,players=NewListPlayers,bombs=NewListBombs])).
 
 
