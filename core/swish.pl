@@ -383,23 +383,23 @@ iaAggresive(IndexPlayer,Bomb,NextMove):-
     bombsList(BombList),
     board(Board),
     playersList(PlayerList),
-    nth0(IndexPlayer,PlayerList,[X,Y,_,Power,Dead,Ia]),
+    nth0(IndexPlayer,PlayerList,[X,Y,_,Power,_,_]),
     checkNextTarget(IndexPlayer,PlayerList,[TargetX,TargetY]),
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
       (
-          %Danger
+          % Danger : Move to safe place
           backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
-          actionSafe(Safe,Bomb,Move,NextMove)
+          actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove)
       );(
             % No Danger
             lineOfFire(X,Y,TargetX,TargetY,Power) ->
             (   
               % Target in line of Fire
               % For the next version implement better move after drop bomb
-              Bomb = 1,
-              escapeBomb(X,Y,NextMove)
+              dropBomb(X,Y,Board,Bomb),
+              NextMove = -1
             );( 
               % No Ennemi in Line of Fire
               checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
@@ -409,15 +409,16 @@ iaAggresive(IndexPlayer,Bomb,NextMove):-
         )
     ),
   !.
- 
-escapeBomb(X,Y,NextMove):-repeat, board(Board), random_between(0,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
+
+
+%escapeBomb(X,Y,NextMove):-repeat, board(Board), random_between(0,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
  
 % Called By IaAggresive
 %------------------------------------------------  
 % Handle Overflow if IA Player is the last of PlayerList
 % If isnt last Then IndexTarget = IndexTarget else IndexTarget = 0 
 % Function             : checkNextTarget
-% Aim		       : Search next target to kick ass
+% Aim          : Search next target to kick ass
 % Parameter 1          : Index of start
 % Parameter 2          : List
 % Parameter 3 / Return : Return X Y of a player not dead
@@ -429,42 +430,48 @@ checkNextTarget(Index,List,[X,Y]):- Search is Index + 1 , nth0(Search,List,[X,Y,
 
 %Called By IaAggresive  
 %------------------------------------------------  
-actionSafe(1,Bomb,Move,NextMove):-
+actionSafe(_,_,_,1,Bomb,Move,NextMove):-
         % It's possible to escape 
             Bomb = 0,
             NextMove = Move.
 
-actionSafe(0,Bomb,_,NextMove):-
+actionSafe(Board,X,Y,0,Bomb,_,NextMove):-
       % IA is Dead --> Last Stand
-            Bomb = 1,
+            dropBomb(X,Y,Board,Bomb),
             NextMove = -1.
 %------------------------------------------------  
 
 %Called By IaAggresive  
 %------------------------------------------------  
 actionAnalyseAllSquare(0,_,_,_,_,_,_,Bomb,NextMove):-
-        Bomb = 0,
+            Bomb = 0,
             NextMove = -1.
 
 actionAnalyseAllSquare(_,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove):-
-        distanceManhattan(SquareList,TargetX,TargetY,ListManhattan),
+            distanceManhattan(SquareList,TargetX,TargetY,ListManhattan),
             weighted(Board,SquareList,ListManhattan,WheitedList),
             minList(WheitedList,Index,_),
             nth0(Index,SquareList,[NextX,NextY]),
             selectSquare(Board,NextX,NextY,TypeSquare),
-            actionSquare(TypeSquare,X,Y,NextX,NextY,Bomb,NextMove).
+            actionSquare(Board,TypeSquare,X,Y,NextX,NextY,Bomb,NextMove).
 %------------------------------------------------  
     
 %Called By ActionAnalyseAllSquare  
 %------------------------------------------------  
-actionSquare('o',X,Y,_,_,Bomb,NextMove):-
-      Bomb = 1,
-            %Find Safe Square next turn...
-            escapeBomb(X,Y,NextMove).
-actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
-         Bomb = 0,
-             move(NextMove,X,Y,NextX,NextY).
+actionSquare(Board,'o',X,Y,_,_,Bomb,NextMove):-
+      % There is a wall in front of Player
+      % Drop Bomb and Find Safe Square next turn
+      dropBomb(X,Y,Board,Bomb),
+      NextMove = -1.
+actionSquare(_,'_',X,Y,NextX,NextY,Bomb,NextMove):-
+      % IA can move without drop a bomb
+      Bomb = 0,
+      move(NextMove,X,Y,NextX,NextY).
 %------------------------------------------------  
+
+dropBomb(X,Y,Board,Bomb):- nth0(Y,Board,Line),nth0(X,Line,Square),bomb(Square),Bomb=1.
+dropBomb(_,_,_,0).
+
 
 %                  assert(bombsList([[[1,8,5,3]]])),
 %                  assert(playersList([[1,1,1,5],[1,5,1,5]])),
