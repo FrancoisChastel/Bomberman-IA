@@ -555,14 +555,22 @@ availableWeight(_,_,_,0).
 bonusWeight(X,Y,Board,1):- nth0(Y, Board, Line), nth0(X, Line, Square), bonus(Square).
 bonusWeight(_,_,_,0).
 
+%Function               : isWall
+% Aim                   : avoid to take a path with a wall
+% Parameter 1           : X
+% Parameter 2           : Y
+% Parameter 3           : Board
 
+isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line;Square),wall(Square).
+isWall(_,_,_,0).
 CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue):-
     bonusWeight(X,Y,Board,Value0),
     nbChoiceAvailable(X,Y,Board,Value1),
     dangerWeight(X,Y,Board,Value2),
+    isWall(X,Y,Board,Value4),
     rapprochement(X,Y,PlayerList,List),
     sum_list(List,Value3),
-    WheightValue is Value0 + Value1 + Value2 + Value3.
+    WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
 
 
 
