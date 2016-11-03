@@ -35,7 +35,7 @@ init(Request):-
         retractall(playersList(_)),
         createMap(Board),
     	assert(board(Board)),
-    	assert(playersList([[1, 1, 10, 0, 0, -1], [1, 7, 10, 1, 0, -1], [7, 1, 10, 2, 0, -1], [7, 7, 10, 3, 0, -1]])),
+    	assert(playersList([[1, 1, 1, 2, 0, -1], [1, 7, 1, 2, 0, -1], [7, 1, 1, 2, 0, -1], [7, 7, 1, 2, 0, -1]])),
         playersList(Players),
         string_chars(PlayersIAJSON,PlayersIAString),
 	convertIAInt(PlayersIAString,PlayersIA),
@@ -399,7 +399,7 @@ iaAggresive(IndexPlayer,Bomb,NextMove):-
               % Target in line of Fire
               % For the next version implement better move after drop bomb
               Bomb = 1,
-              NextMove = -1
+              escapeBomb(X,Y,NextMove)
             );( 
               % No Ennemi in Line of Fire
               checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
@@ -409,7 +409,9 @@ iaAggresive(IndexPlayer,Bomb,NextMove):-
         )
     ),
   !.
-  
+ 
+escapeBomb(X,Y,NextMove):-repeat, board(Board), random_between(0,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
+ 
 % Called By IaAggresive
 %------------------------------------------------  
 % Handle Overflow if IA Player is the last of PlayerList
@@ -455,10 +457,10 @@ actionAnalyseAllSquare(_,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove):-
     
 %Called By ActionAnalyseAllSquare  
 %------------------------------------------------  
-actionSquare('o',_,_,_,_,Bomb,NextMove):-
+actionSquare('o',X,Y,_,_,Bomb,NextMove):-
       Bomb = 1,
             %Find Safe Square next turn...
-            NextMove = 0.
+            escapeBomb(X,Y,NextMove).
 actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
          Bomb = 0,
              move(NextMove,X,Y,NextX,NextY).
@@ -478,9 +480,9 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
 %%%%%%%%%%%%%% IA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-ia(2,IndexPlayer,ListPlayer,Board,BombList,NextMove) :-
-    nth0(IndexPlayer,PlayerList,[X,Y,_,_,_,_]),
-    createPonderatedList(X,Y,Board,BombList,PlayerList,PonderatedList),
+ia(2,IndexPlayer,PlayersList,Board,BombList,NextMove) :-
+    nth0(IndexPlayer,PlayersList,[X,Y,_,_,_,_]),
+    createPonderatedList(X,Y,Board,BombList,PlayersList,PonderatedList),
     max_list(PonderatedList,Max),
     nth0(Choice,PonderatedList,Max),
     NextMove is Choice.
@@ -490,32 +492,29 @@ ia(2,IndexPlayer,ListPlayer,Board,BombList,NextMove) :-
 %----------------
 %Function used by IA
 
-%branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
-%    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,ValueGlobal).
+branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
+    correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,Value),
+    ValueGlobal is Value.
 
-%branch(It,X,Y,ValueGlobal) :-
+branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
 
-%    Index is It+1,
-%    branch(Index,X,Y,Value0),
-%    Y0 is Y-1,branch(Index,X,Y0,Value1),
-%    X0 is X+1,branch(Index,X0,Y,Value2),
-%    Y1 is Y+1,branch(Index,X,Y1,Value3),
-%    X1 is X-1,branch(Index,X1,Y,Value4),
-%    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue),
-%    ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
+    Index is It+1,
+    branch(Index,X,Y,Board,PlayerList,BombList,Value0),
+    Y0 is Y-1,branch(Index,X,Y0,Board,PlayerList,BombList,Value1),
+    X0 is X+1,branch(Index,X0,Y,Board,PlayerList,BombList,Value2),
+    Y1 is Y+1,branch(Index,X,Y1,Board,PlayerList,BombList,Value3),
+    X1 is X-1,branch(Index,X1,Y,Board,PlayerList,BombList,Value4),
+    correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue),
+    ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
 
 
-%createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
-%    A is Y-1,
-%    B is X+1,
-%    C is Y+1,
-%    D is X-1,
-%    Branch(0,X,Y,Board,BombList,PlayerList,Value1),
-%    Branch(0,X,A,Board,BombList,PlayerList,Value2),
-%    Branch(0,B,Y,Board,BombList,PlayerList,Value3),
-%    Branch(0,X,C,Board,BombList,PlayerList,Value4),
-%    Branch(0,Ds,Y,Board,BombList,PlayerList,Value5),
-%    List = [Value1,Value2,Value3,Value4,Value5].
+createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
+    branch(0,X,Y,Board,PlayerList,BombList,Value1),
+    A is Y-1,branch(0,X,A,Board,PlayerList,BombList,Value2),
+    B is X+1,branch(0,B,Y,Board,PlayerList,BombList,Value3),
+    C is Y+1,branch(0,X,C,Board,PlayerList,BombList,Value4),
+    D is X-1,branch(0,D,Y,Board,PlayerList,BombList,Value5),
+    List = [Value1,Value2,Value3,Value4,Value5].
 
 
 % Function 			   : rapprochement
@@ -550,6 +549,8 @@ dangerWeight(_,_,_,0).
 % Parameter 3 		   : Board
 % Parameter 4 / Return : Number way available
 nbChoiceAvailable(X,Y,Board,Val):-
+writeln(X),
+writeln(Y),
 X1 is X+1, availableWeight(X1,Y,Board,Value1),
 Y1 is Y-1, availableWeight(X,Y1,Board,Value2),
 X2 is X-1, availableWeight(X2,Y,Board,Value3),
@@ -587,16 +588,17 @@ bonusWeight(_,_,_,0).
 % Parameter 2           : Y
 % Parameter 3           : Board
 
-isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line;Square),wall(Square).
+isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line,Square),wall(Square).
 isWall(_,_,_,0).
-%CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue):-
-%    bonusWeight(X,Y,Board,Value0),
-%    nbChoiceAvailable(X,Y,Board,Value1),
-%    dangerWeight(X,Y,Board,Value2),
-%    isWall(X,Y,Board,Value4),
-%    rapprochement(X,Y,PlayerList,List),
-%    sum_list(List,Value3),
-%    WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
+
+correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue):-
+bonusWeight(X,Y,Board,Value0),
+nbChoiceAvailable(X,Y,Board,Value1),
+dangerWeight(X,Y,Board,Value2),
+isWall(X,Y,Board,Value4),
+rapprochement(X,Y,PlayerList,List),
+sum_list(List,Value3),
+WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
 
 
 
@@ -662,10 +664,10 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 %- A game turn
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
-	playersBeat(0, Board, ListPlayers, ListBombs, TBoard, TListPlayers, TListBombs),
-	managementBomb(0, TBoard, TListPlayers, TListBombs, NewBoard, NewListPlayers, NewListBombs),
-	setModel(NewBoard, NewListPlayers, NewListBombs),
-      	reply_json(json([players=NewListPlayers, bombs=NewListBombs, board=NewBoard])).
+	managementBomb(0, Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs, ListPlayers),
+	playersBeat(0, NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
+	setModel(TBoard, TListPlayers, TListBombs),
+      	reply_json(json([players=TListPlayers, bombs=TListBombs, board=TBoard])).
 
 % Function    :	managementBomb
 % Objective   :	manage the bomb 
@@ -761,7 +763,8 @@ playersBeat(_, NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .
 playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
 	nth0(5, Player, IA),
 	%ia(IA, Player, Board, ListBombs, Bomb, Direction),
-	iaAggresive(IndexPlayer,Bomb,Direction),
+	%iaAggresive(IndexPlayer,Bomb,Direction),
+    ia(2,IndexPlayer,[Player|T],Board,ListBombs,NextMove),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
 	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
@@ -853,11 +856,11 @@ createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x'],
           ['x','_','_','_','_','_','_','_','x'],
           ['x','_','x','o','x','o','x','_','x'],
-          ['x','_','o','o','o','o','o','_','x'],
+          ['x','o','o','o','o','o','o','_','x'],
+          ['x','o','x','o','x','o','x','_','x'],
+          ['x','o','o','o','o','o','o','_','x'],
           ['x','_','x','o','x','o','x','_','x'],
-          ['x','_','o','o','o','o','o','_','x'],
-          ['x','_','x','o','x','o','x','_','x'],
-          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','_','o','o','o','_','_','x'],
           ['x','x','x','x','x','x','x','x','x']
           ].
 
