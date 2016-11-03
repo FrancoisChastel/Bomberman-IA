@@ -16,7 +16,7 @@
     <form>
     <div id="settings" class="row" style="margin-left:auto;margin-right: auto;margin-top: 40px;width:40%">
         <div class="form-group" style="margin: auto;width:200px">
-            <label>Server address<input class="form-control" style="width:auto" type="textaera" id="servAddress"></label><br>
+            <label>Server address<input class="form-control" style="width:auto" type="textaera" id="servAddress" value="http://localhost:8080/"></label><br>
         </div>
         <div class="form-group" style="margin: auto;width:200px">
             <label>Nombre de joueurs<input class="form-control" style="width:auto" type="number" id="numberPlayers"></label><br>
@@ -46,7 +46,7 @@
             var contenu = '<div class="form-group">';
             for(var i=0;i<numberPlayers;i++)
             {
-                contenu+='<label>IA Joueur '+(i+1)+'<select class="playersIA"><option value="0">Random</option><option value="1">Aggressive</option></select></label><br>'
+                contenu+='<label>IA Joueur '+(i+1)+'<select class="playersIA"><option value="1">Aggressive</option><option value="0">Random</option></select></label><br>'
             }
             contenu+='</div>';
             $('#players').html(contenu);
@@ -76,7 +76,7 @@
                     board = data['board'];
                     displayInfoPlayers();
                     displayBoard();
-                    setTimeout(motor,2000);
+                    setTimeout(motor,800);
                 }
             })
         }
@@ -97,7 +97,7 @@
                     if(!gameOver)
                     {
                         displayInfoPlayers();
-                        displayBoard();
+                        transitionBoard();
                         setTimeout(motor,1000);
                     }
                     else 
@@ -143,6 +143,14 @@
                                 {
                                     contenu+='<img id="bomb" src="img/grassBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
                                 }
+                                else if(board[i][j] == "p")
+                                {
+                                    contenu+='<img id="bombBonus" src="img/bonusBiggerBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                }
+                                else if(board[i][j] == "c")
+                                {
+                                    contenu+='<img id="bombBonus" src="img/bonusBombs.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                }
                                 else 
                                 {
                                     contenu+='<img id="block" src="img/grass.png" style="position: relative; top: 0; left: 0;z-index:1;">';
@@ -178,6 +186,14 @@
                             {
                                 contenu+='<img id="bomb" src="img/grassBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
                             }
+                            else if(board[i][j] == "p")
+                            {
+                                contenu+='<img id="bombBonus" src="img/bonusBiggerBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                            }
+                            else if(board[i][j] == "c")
+                            {
+                                contenu+='<img id="bombBonus" src="img/bonusBombs.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                            }
                             else 
                             {
                                 contenu+='<img id="block" src="img/grass.png">';
@@ -197,8 +213,8 @@
         {
             for(var i=0;i<players.length;i++)
             {
-                var diffX = players[i][1]-oldPlayers[i][1];
-                var diffY = players[i][0]-oldPlayers[i][0];
+                var diffX = players[i][0]-oldPlayers[i][0];
+                var diffY = players[i][1]-oldPlayers[i][1];
                 if(diffX!=0)
                 {
                     if(diffX>0)
@@ -220,7 +236,7 @@
                         });
                     }
                 }
-                else 
+                else if(diffY!=0)
                 {
                     if(diffY>0)
                     {
@@ -242,7 +258,7 @@
                     }
                 }
             }
-            setTimeout(displayBoard,1000);
+            setTimeout(displayBoard,500);
         }
         
         function displayInfoPlayers()
@@ -335,13 +351,6 @@
             return false;
         }
         
-        function getValPx(chaine)
-        {
-            var value = 0;
-            for (var i = 0, len = chaine.length; i < len; i++) {
-                val
-            }
-        }
 
     </script>
     </body>
