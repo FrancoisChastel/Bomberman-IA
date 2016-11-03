@@ -395,8 +395,8 @@ ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 %        - 2 : down
 %        - 3 : left
 ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
-    nth0(IndexPlayer,PlayersList,[X,Y,_,Power,_,_]),
-    checkNextTarget(IndexPlayer,PlayersList,[TargetX,TargetY]),
+    nth0(IndexPlayer,PlayerList,[X,Y,_,Power,_,_]),
+    checkNextTarget(IndexPlayer,PlayerList,[TargetX,TargetY]),
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
@@ -414,9 +414,10 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
               NextMove = -1
             );( 
               % No Ennemi in Line of Fire
-              checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
-              length(SquareList,LengthSquareList),
-              actionAnalyseAllSquare(LengthSquareList,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove)
+              % Check Close Object
+              checkCloseObject(Board,BombList,X,Y,Find,Move),
+              closeObjectDetected(Find,Board,X,Y,TargetX,TargetY,Bomb,Move,NextMove)
+              
             )
         )
     ),
@@ -455,6 +456,18 @@ actionSafe(Board,X,Y,0,Bomb,_,NextMove):-
 
 %Called By IaAggresive  
 %------------------------------------------------  
+closeObjectDetected(1,_,_,_,_,_,_,Move,NextMove):-
+            NextMove = Move.
+
+closeObjectDetected(_,Board,X,Y,TargetX,TargetY,Bomb,_,NextMove):-
+    checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
+        length(SquareList,LengthSquareList),
+        actionAnalyseAllSquare(LengthSquareList,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove).
+    
+%------------------------------------------------  
+
+%Called By CloseObjectDetected  
+%------------------------------------------------  
 actionAnalyseAllSquare(0,_,_,_,_,_,_,Bomb,NextMove):-
             Bomb = 0,
             NextMove = -1.
@@ -479,7 +492,10 @@ actionSquare(_,'_',X,Y,NextX,NextY,Bomb,NextMove):-
       % IA can move without drop a bomb
       Bomb = 0,
       move(NextMove,X,Y,NextX,NextY).
-%------------------------------------------------  
+%------------------------------------------------ 
+
+
+
 
 dropBomb(X,Y,Board,Bomb):- nth0(Y,Board,Line),nth0(X,Line,Square),not(bomb(Square)),Bomb=1.
 dropBomb(_,_,_,0).
@@ -493,8 +509,33 @@ dropBomb(_,_,_,0).
 %                  iaAggresive(IndexPlayer,IndexTarget,Bomb,Move).
 
 
+p_move(X,Y,NewX,NewY):- NewX = X,NewY is Y-1.    
+p_move(X,Y,NewX,NewY):- NewX is X+1,NewY = Y. 
+p_move(X,Y,NewX,NewY):- NewX = X,NewY is Y+1. 
+p_move(X,Y,NewX,NewY):- NewX is X-1,NewY = Y. 
+
+p_BonusSquare(Board,X,Y):- nth0(Y,Board,Line),nth0(X,Line,Square),bonus(Square).
+
+checkCloseObject(Board,BombList,X,Y,Find,NextMove):- 
+    p_move(X,Y,NX,NY),
+    accessible(Board,X,Y),
+    danger(X,Y,BombList),
+    p_BonusSquare(Board,X,Y),
+    move(NextMove,X,Y,NX,NY),
+    Find = 1.
+checkCloseObject(Board,BombList,X,Y,Find,NextMove):- 
+    p_move(X,Y,NX,NY),
+    p_move(NX,NY,TempX,TempY),
+    accessible(Board,X,Y),
+    danger(X,Y,BombList),
+    p_BonusSquare(Board,X,Y),
+    move(NextMove,X,Y,NX,NY),
+    Find = 1.
+checkCloseObject(_,_,_,_,0,_).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%%%%%%%%%%%%% IA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
