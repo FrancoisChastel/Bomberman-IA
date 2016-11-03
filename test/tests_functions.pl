@@ -123,32 +123,30 @@ test(updateOverFlowIndex):- Index=5, HoldList=[[2,4],[5,6],[3,4],[6,2]], Val=[1,
 %
 :- begin_tests(applyMove).
 
-preparePlayersListApplyMove:-assert(main:playersList([[3,4,8,3],[3,6,10,2],[6,4,5,4]])).
 
-test(applyMoveFirstIndex,
+test(applyMove1,
 	[
-	 setup(preparePlayersListApplyMove),
-	 cleanup(retractall(main:playersList(_))),
-	 true(R == [[5,6,8,3],[3,6,10,2],[6,4,5,4]])
+	 true(R == [3,3,8,3])
 	]
-    ):- main:applyMove(0,5,6),main:playersList(R).
+    ):- main:applyMove([3,4,8,3],0,R).
 
-test(applyMoveLastIndex,
+test(applyMove1,
          [
-          setup(preparePlayersListApplyMove),
-          cleanup(retractall(main:playersList(_))),
-          true(R == [[3,4,8,3],[3,6,10,2],[5,6,5,4]])
+          true(R == [3,5,8,3])
          ]
-     ):- main:applyMove(2,5,6),main:playersList(R).
+     ):- main:applyMove([2,5,8,3],1,R).
 
-test(applyMoveNoMatterIndex,
+test(applyMove3,
          [
-          setup(preparePlayersListApplyMove),
-          cleanup(retractall(main:playersList(_))),
-          true(R == [[3,4,8,3],[5,6,10,2],[6,4,5,4]])
+          true(R == [2,6,8,3])
          ]
-     ):- main:applyMove(1,5,6),main:playersList(R).
+     ):- main:applyMove([2,5,8,3],2,R).
 
+test(applyMove4,
+         [
+          true(R == [1,5,8,3])
+         ]
+     ):- main:applyMove([2,5,8,3],3,R).
 :- end_tests(applyMove).
 
 %%%%%%%%%%%%%%%%	Verify that attainable is working properly
@@ -375,6 +373,7 @@ test(danger1):- main:danger(1,3,[[[1,1,3,1],[4,3,3,2]],[[8,1,3,2],[1,2,3,1]]]).
 %must return false
 test(danger2):- not( main:danger(1,3,[[[1,1,3,1],[4,3,3,2]],[[8,1,3,2],[1,5,3,1]]]) ).
 
+test(danger3):- main:danger(1,3,[[[1,3,3,1]]]).
 
 :- end_tests(danger).
 
@@ -466,20 +465,93 @@ test(safeAndAttainable7,
 
 :- end_tests(safeAndAttainable).
 
+:- begin_tests(backToSafePlace).
+
+
+test(back1):- main:initFunctionSafePlace(3,1,
+                       [
+                         ['x','x','x','x','x','x','x','x','x'],
+                         ['x','_','_','b','_','_','_','_','x'],
+                         ['x','_','x','o','x','o','x','_','x'],
+                         ['x','_','o','o','o','o','o','_','x'],
+                         ['x','_','x','o','x','o','x','_','x'],
+                         ['x','_','o','o','o','o','o','_','x'],
+                         ['x','_','x','o','x','o','x','_','x'],
+                         ['x','_','_','_','_','_','_','_','x'],
+                         ['x','x','x','x','x','x','x','x','x']                       ],[[[3,1,5,2]]],[],3,Safe,Move), Safe =:= 1 , Move =:= 3.
+
+test(back2):-
+	main:initFunctionSafePlace(3,1,
+                      [
+                      	['x','x','x','x','x','x','x','x','x'],
+	        	['x','_','x','b','_','_','_','_','x'],
+   	    		['x','_','x','_','x','o','x','_','x'],
+   	    		['x','_','o','o','o','o','o','_','x'],
+   	     		['x','_','x','o','x','o','x','_','x'],
+   	       		['x','_','o','o','o','o','o','_','x'],
+   	        	['x','_','x','o','x','o','x','_','x'],
+   	       		['x','_','_','_','_','_','_','_','x'],
+   			['x','x','x','x','x','x','x','x','x']
+                      ],[[[3,1,5,2]]],[],3,Safe,Move), Safe =:= 1 , Move =:= 1.
+
+test(back3):- main:initFunctionSafePlace(1,3,
+                      [
+                      	['x','x','x','x','x','x','x','x','x'],
+	        	['x','b','x','_','_','_','_','_','x'],
+   	    		['x','_','x','_','x','o','x','_','x'],
+   	    		['x','_','_','_','b','o','o','_','x'],
+   	     		['x','_','x','o','x','o','x','_','x'],
+   	       		['x','_','o','o','o','o','o','_','x'],
+   	        	['x','_','x','o','x','o','x','_','x'],
+   	       		['x','_','b','_','_','_','_','_','x'],
+   			['x','x','x','x','x','x','x','x','x']
+                      ],[[[1,1,5,7],[4,3,5,2],[2,7,5,3]]],[],3,Safe,Move), Safe =:= 1 , Move =:= 1.
+
+test(back4):- main:initFunctionSafePlace(2,3,
+                      [
+                      	['x','x','x','x','x','x','x','x','x'],
+	        	['x','b','x','_','_','_','_','_','x'],
+   	    		['x','_','x','_','x','o','x','_','x'],
+   	    		['x','_','_','_','b','o','o','_','x'],
+   	     		['x','_','x','o','x','o','x','_','x'],
+   	       		['x','_','o','o','o','o','o','_','x'],
+   	        	['x','_','x','o','x','o','x','_','x'],
+   	       		['x','_','b','_','_','_','_','_','x'],
+   			['x','x','x','x','x','x','x','x','x']
+                      ],[[[1,1,5,7],[4,3,5,1],[2,7,5,3]]],[],3,Safe,Move), Safe =:= 1, Move =:= -1.
+
+
+test(back5):- not(main:initFunctionSafePlace(1,3,
+                      [
+                      	['x','x','x','x','x','x','x','x','x'],
+	        	['x','b','x','_','_','_','_','_','x'],
+   	    		['x','_','x','_','x','o','x','_','x'],
+   	    		['x','_','_','b','_','o','o','_','x'],
+   	     		['x','_','x','o','x','o','x','_','x'],
+   	       		['x','_','o','o','o','o','o','_','x'],
+   	        	['x','_','x','o','x','o','x','_','x'],
+   	       		['x','_','b','_','_','_','_','_','x'],
+   			['x','x','x','x','x','x','x','x','x']
+                      ],[[[1,1,5,7],[3,3,5,4],[2,7,5,4]]],[],3,Safe,Move)).
+
+
+
+:- end_tests(backToSafePlace).
+
 %%%%%%%%%%%%%%%%%       Verify that lineExplode is working properly
 %
-:- begin_tests(lineExplode).
+%:- begin_tests(lineExplode).
 
 %- common use case with an explosion going to the up, killing nobody but destroying a destructible block
-test(lineExplodeNormalUseCase) :- InitBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','o','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], 
-			InitPlayers = [[3, 4, 1, 1, 0]], Direction is 0, Xb is 3, Yb is 1, Eb is 2, 
-			NewBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','_','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], NewPlayers = [[3, 4, 1, 1, 0]],
-			main:lineExplode(InitBoard, Xb, Yb, Eb, InitPlayers, NewPlayers, NewBoard, NewPlayers).
+%test(lineExplodeNormalUseCase) :- InitBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','o','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], 
+%			InitPlayers = [[3, 4, 1, 1, 0]], Direction is 0, Xb is 3, Yb is 1, Eb is 2, 
+%			NewBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','_','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], NewPlayers = [[3, 4, 1, 1, 0]],
+%			main:lineExplode(InitBoard, Xb, Yb, Eb, InitPlayers, NewPlayers, NewBoard, NewPlayers).
 
 %- common use case with an explosion going to the right and a wall that stop the explosion
-test(lineExplodeNormalUseCase) :- InitBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','o','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], 
-                        InitPlayers = [[3, 4, 1, 1, 0]], Direction is 0, Xb is 3, Yb is 1, Eb is 2, 
-                        NewBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','_','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], NewPlayers = [[3, 4, 1, 1, 0]],
-                        main:lineExplode(InitBoard, Xb, Yb, Eb, InitPlayers, NewPlayers, NewBoard, NewPlayers).
+%test(lineExplodeNormalUseCase) :- InitBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','o','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], 
+ %                       InitPlayers = [[3, 4, 1, 1, 0]], Direction is 0, Xb is 3, Yb is 1, Eb is 2, 
+  %                      NewBoard = [['x','x','x','x'],[,'x','o','o','x'],['x','_','o','x'],['x','_','_','x'],['x','b','_','x'],['x','x','x','x']], NewPlayers = [[3, 4, 1, 1, 0]],
+  %                      main:lineExplode(InitBoard, Xb, Yb, Eb, InitPlayers, NewPlayers, NewBoard, NewPlayers).
 
-:- end_tests(lineExplode).
+%:- end_tests(lineExplode).
