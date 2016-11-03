@@ -480,9 +480,9 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
 %%%%%%%%%%%%%% IA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-ia(2,IndexPlayer,ListPlayer,Board,BombList,NextMove) :-
-    nth0(IndexPlayer,PlayerList,[X,Y,_,_,_,_]),
-    createPonderatedList(X,Y,Board,BombList,PlayerList,PonderatedList),
+ia(2,IndexPlayer,PlayersList,Board,BombList,NextMove) :-
+    nth0(IndexPlayer,PlayersList,[X,Y,_,_,_,_]),
+    createPonderatedList(X,Y,Board,BombList,PlayersList,PonderatedList),
     max_list(PonderatedList,Max),
     nth0(Choice,PonderatedList,Max),
     NextMove is Choice.
@@ -588,7 +588,7 @@ bonusWeight(_,_,_,0).
 % Parameter 2           : Y
 % Parameter 3           : Board
 
-isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line;Square),wall(Square).
+isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line,Square),wall(Square).
 isWall(_,_,_,0).
 
 correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue):-
@@ -764,7 +764,7 @@ playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT
 	nth0(5, Player, IA),
 	%ia(IA, Player, Board, ListBombs, Bomb, Direction),
 	%iaAggresive(IndexPlayer,Bomb,Direction),
-    ia(2,IndexPlayer,ListPlayer,Board,ListBombs,NextMove),
+    ia(2,IndexPlayer,[Player|T],Board,ListBombs,NextMove),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
 	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
