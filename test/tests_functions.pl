@@ -538,6 +538,25 @@ test(back5):- not(main:initFunctionSafePlace(1,3,
 
 :- end_tests(backToSafePlace).
 
+
+:- begin_tests(rapprochement).
+
+test(rapprochement1):- main:rapprochement(3,4,[[1,3|_],[3,4|_],[5,2|_]],List), List == [0.8125,0.75],!.
+
+test(rapprochement2):- main:rapprochement(1,3,[[1,3|_],[3,4|_],[5,2|_]],List), List == [0.8125,0.6875],!.
+
+test(rapprochement3):- main:rapprochement(5,2,[[1,3|_],[3,4|_],[5,2|_]],List), List == [0.6875,0.75],!.
+
+:- end_tests(rapprochement).
+
+:- begin_tests(dangerWeight).
+
+test(dangerWeight1):- main:dangerWeight(1,2,[[[1,3,5,2],[3,5,6,5]],[[7,3,5,1]]],1).
+
+%test(dangerWeight1):- main:dangerWeight(3,11,)
+
+:- end_tests(dangerWeight).
+
 %%%%%%%%%%%%%%%%%       Verify that lineExplode is working properly
 %
 %:- begin_tests(lineExplode).
