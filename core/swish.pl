@@ -490,32 +490,32 @@ ia(2,IndexPlayer,ListPlayer,Board,BombList,NextMove) :-
 %----------------
 %Function used by IA
 
-branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
-    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,ValueGlobal).
+%branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
+%    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,ValueGlobal).
 
-branch(It,X,Y,ValueGlobal) :-
+%branch(It,X,Y,ValueGlobal) :-
 
-    Index is It+1,
-    branch(Index,X,Y,Value0),
-    Y0 is Y-1,branch(Index,X,Y0,Value1),
-    X0 is X+1,branch(Index,X0,Y,Value2),
-    Y1 is Y+1,branch(Index,X,Y1,Value3),
-    X1 is X-1,branch(Index,X1,Y,Value4),
-    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue),
-    ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
+%    Index is It+1,
+%    branch(Index,X,Y,Value0),
+%    Y0 is Y-1,branch(Index,X,Y0,Value1),
+%    X0 is X+1,branch(Index,X0,Y,Value2),
+%    Y1 is Y+1,branch(Index,X,Y1,Value3),
+%    X1 is X-1,branch(Index,X1,Y,Value4),
+%    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue),
+%    ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
 
 
-createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
-    A is Y-1,
-    B is X+1,
-    C is Y+1,
-    D is X-1,
-    Branch(0,X,Y,Board,BombList,PlayerList,Value1),
-    Branch(0,X,A,Board,BombList,PlayerList,Value2),
-    Branch(0,B,Y,Board,BombList,PlayerList,Value3),
-    Branch(0,X,C,Board,BombList,PlayerList,Value4),
-    Branch(0,Ds,Y,Board,BombList,PlayerList,Value5),
-    List = [Value1,Value2,Value3,Value4,Value5].
+%createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
+%    A is Y-1,
+%    B is X+1,
+%    C is Y+1,
+%    D is X-1,
+%    Branch(0,X,Y,Board,BombList,PlayerList,Value1),
+%    Branch(0,X,A,Board,BombList,PlayerList,Value2),
+%    Branch(0,B,Y,Board,BombList,PlayerList,Value3),
+%    Branch(0,X,C,Board,BombList,PlayerList,Value4),
+%    Branch(0,Ds,Y,Board,BombList,PlayerList,Value5),
+%    List = [Value1,Value2,Value3,Value4,Value5].
 
 
 % Function 			   : rapprochement
@@ -589,14 +589,14 @@ bonusWeight(_,_,_,0).
 
 isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line;Square),wall(Square).
 isWall(_,_,_,0).
-CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue):-
-    bonusWeight(X,Y,Board,Value0),
-    nbChoiceAvailable(X,Y,Board,Value1),
-    dangerWeight(X,Y,Board,Value2),
-    isWall(X,Y,Board,Value4),
-    rapprochement(X,Y,PlayerList,List),
-    sum_list(List,Value3),
-    WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
+%CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue):-
+%    bonusWeight(X,Y,Board,Value0),
+%    nbChoiceAvailable(X,Y,Board,Value1),
+%    dangerWeight(X,Y,Board,Value2),
+%    isWall(X,Y,Board,Value4),
+%    rapprochement(X,Y,PlayerList,List),
+%    sum_list(List,Value3),
+%    WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
 
 
 
@@ -800,7 +800,7 @@ applyAction(IndexPlayer, Board, Player, ListBombs, Direction, 1, NewPlayer, NewL
 %        - 2 : down
 %        - 3 : left
 backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
-            functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,IsSafe,IsMove) ->
+            initFunctionSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,IsSafe,IsMove) ->
             Safe = IsSafe,Move = IsMove;
           Safe = 0,Move = -1.
 
@@ -810,12 +810,27 @@ functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
     append(N,[[X,Y]],N2),
     (   
   ( not(danger(X,Y,ListBomb)) , Safe = 1) ;
-  ( Ydep is Y-1 , backToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
-  ( Xdep is X-1, backToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
-  ( Ydep is Y+1, backToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
-  ( Xdep is X+1, backToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 )
+  ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
+  ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
+  ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+  ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 )
     )
     ;   Safe = 0.
+
+initFunctionSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
+    %DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 > 0,
+    DistanceLimit > 0,
+    (  not(nth0(Index,N,[X,Y])))->
+    append(N,[[X,Y]],N2),
+    (   
+  ( not(danger(X,Y,ListBomb)) , Safe = 1, Move = -1) ;
+  ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
+  ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
+  ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+  ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 )
+    )
+    ;   Safe = 0.
+
 
 
 
