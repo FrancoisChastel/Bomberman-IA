@@ -357,7 +357,7 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 
 ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 	 repeat,
-	 nth0(IndexPlayer,PlayerList,[X,Y,_,Power,Dead,Ia]),
+	 nth0(IndexPlayer,PlayersList,[X,Y,_,Power,Dead,Ia]),
      Bomb = 0,
 	 random_between(-1,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
 
@@ -464,7 +464,7 @@ actionSquare(_,'_',X,Y,NextX,NextY,Bomb,NextMove):-
       move(NextMove,X,Y,NextX,NextY).
 %------------------------------------------------  
 
-dropBomb(X,Y,Board,Bomb):- nth0(Y,Board,Line),nth0(X,Line,Square),bomb(Square),Bomb=1.
+dropBomb(X,Y,Board,Bomb):- nth0(Y,Board,Line),nth0(X,Line,Square),not(bomb(Square)),Bomb=1.
 dropBomb(_,_,_,0).
 
 
@@ -489,7 +489,6 @@ ia(2,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     nth0(Choice,PonderatedList,Max),
     NextMove is Choice-1,
     Bomb = 0,
-    writeln('Fin du joueur'),
     !.
 
 
@@ -512,13 +511,25 @@ branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
     ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
 
 
-createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
+createPonderatedList(X,Y,Board,BombList,PlayerList,Bomb,List) :-
     branch(0,X,Y,Board,PlayerList,BombList,Value1),
     A is Y-1,branch(0,X,A,Board,PlayerList,BombList,Value2),
     B is X+1,branch(0,B,Y,Board,PlayerList,BombList,Value3),
     C is Y+1,branch(0,X,C,Board,PlayerList,BombList,Value4),
     D is X-1,branch(0,D,Y,Board,PlayerList,BombList,Value5),
-    List = [Value1,Value2,Value3,Value4,Value5].
+    ((bombWorthIt([[X,A],[B,Y],[X,C],[D,Y]],Board,DropIt), DropIt = 1) ;(dropBomb(X,Y,Board,Bomb),Bomb = 1)),
+    List = [Value1,Value2,Value3,Value4,Value5],
+    Bomb = DropIt.
+
+
+%Function              : bombWorthIt
+%Aim                   : Should the IA drop bomb or not
+
+bombWorthIt([[X,Y]|T],Board,1) :-
+   nth0(Y, Board, Line),nth0(X, Line, Square), destructibleBlock(Square).
+bombWorthIt(_,_,_,0).
+
+
 
 
 % Function 			   : rapprochement
