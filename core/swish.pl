@@ -691,23 +691,8 @@ turn(_Request) :-
 bombsManagement(Board, ListPlayer, ListsBombs, NewBoard, NewListPlayer, NewBombs):-
 	decrementBombsOfPlayers(ListsBombs, DListsBombs),
 	explodingBombsOfPlayers(DListsBombs, BombsExplosing),
-	explosion(Board, ListPlayer, BombsExplosing, NewBoard, NewListPlayer),
+	explosions(Board, ListPlayer, BombsExplosing, NewBoard, NewListPlayer),
 	deleteExplodedBombs(DListsBombs, BombsExplosing, NewBombs), !.
-
-
-% Function    :	managementBomb
-% Objective   :	manage the bomb 
-% Parameter 1 :	Board
-% Parameter 2 :	List players
-% Parameter 3 :	List bombs
-% Parameter 4 :	New board
-% Parameter 5 :	New list of players
-% Parameter 6 :	New list of bombs
-% Parameter 7 : Recursive list param
-managementBomb(NewBoard, [], [], NewBoard, [], []):- !.
-managementBomb(Board, [Hp|Tp], [Hb|Tb], NewExploding):-
-	checkBomb(Board, Hp, Hb, TBoard, )	
-	managementBomb(TBoard, Tp, Tb, NewBoard, NewPlayers, NewBombs).
 
 
 % Function    :	decrementBombsOfPlayers
