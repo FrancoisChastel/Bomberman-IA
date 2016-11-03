@@ -85,9 +85,9 @@
                 success:function(data)
                 {
                     oldPlayers = players;
-                    players = data['list'];
+                    players = data['players'];
                     var gameOver = false;
-                    if(gameOver)
+                    if(!gameOver)
                     {
                         display();
                         setTimeout(motor,1000);
@@ -117,6 +117,10 @@
                     if(board[i][j] == "x")
                     {
                         contenu+='<img id="block" src="img/wall.png">';
+                    }
+                    else if(board[i][j] == "o")
+                    {
+                        contenu+='<img id="wallDes" src="img/destructible.png">';
                     }
                     else
                     {

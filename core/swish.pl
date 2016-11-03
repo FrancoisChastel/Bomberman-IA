@@ -107,7 +107,7 @@ move(0,X,Y,NewX,NewY):- NewX = X,NewY is Y-1.
 move(1,X,Y,NewX,NewY):- NewX is X+1,NewY = Y. 
 move(2,X,Y,NewX,NewY):- NewX = X,NewY is Y+1. 
 move(3,X,Y,NewX,NewY):- NewX is X-1,NewY = Y. 
-move(_,X,Y,X,Y).
+move(-1,X,Y,X,Y).
 
 % Function    : Movements
 % Objective   : Know if a movemnt is available for the player
@@ -127,10 +127,9 @@ movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
 % Parameter 3 : Direction
 % Parameter 4 : player with new coordinates after move
 applyMove(Player, Direction, NewPlayer):- 
-		nth0(0, X, Player),
-		nth0(1, Y, Player),
+		nth0(0, Player, X),
+		nth0(1, Player, Y),
 		move(Direction, X, Y, NewX, NewY),
-		accessible(Board, NewX, NewY),
 		updateList(0, NewX, Player, TInfoPlayer),
 		updateList(1, NewY, TInfoPlayer, NewPlayer).		
 
@@ -329,7 +328,12 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 
 %%%%%%%%%%%%%%%% IA RANDOM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ia_random(X,Y,NewX,NewY):-repeat, random_between(-1,3,Move),move(Move,X,Y,NewX,NewY),board(Board),accessible(Board,NewX,NewY),!.
+ia_random(IndexPlayer,Bomb,NextMove):-
+	 repeat, 
+	 playersList(PlayerList),
+	 nth0(IndexPlayer,PlayerList,[X,Y,_,Power,Dead,Ia]),
+	 board(Board),	
+	 random_between(-1,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -347,13 +351,13 @@ ia_random(X,Y,NewX,NewY):-repeat, random_between(-1,3,Move),move(Move,X,Y,NewX,N
 %        - 1 : right
 %        - 2 : down
 %        - 3 : left
-iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-              
+iaAggresive(IndexPlayer,Bomb,NextMove):-              
   % Get Global Variable
     bombsList(BombList),
     board(Board),
     playersList(PlayerList),
-    nth0(IndexPlayer,PlayerList,[X,Y,_,Power]),
-    checkNextTarget(IndexTarget,PlayerList,[TargetX,TargetY]),
+    nth0(IndexPlayer,PlayerList,[X,Y,_,Power,Dead,Ia]),
+    checkNextTarget(IndexPlayer,PlayerList,[TargetX,TargetY]),
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
@@ -389,8 +393,9 @@ iaAggresive(IndexPlayer,IndexTarget,Bomb,NextMove):-
 % Parameter 1          : Index of start
 % Parameter 2          : List
 % Parameter 3 / Return : Return X Y of a player not dead
+
 checkNextTarget(R,List,[X,Y]):- length(List,Longueur), R is Longueur -1 , checkNextTarget(-1,List,[X,Y]).
-checkNextTarget(Index,List,[X,Y]):- Search is Index + 1 , nth0(Search,List,[X,Y,_,_,0]);
+checkNextTarget(Index,List,[X,Y]):- Search is Index + 1 , nth0(Search,List,[X,Y,_,_,0,_]);
           (Search is Index + 1,checkNextTarget(Search,List,[X,Y])).
 %------------------------------------------------ 
 
@@ -532,9 +537,9 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
 	playersBeat(0, Board, ListPlayers, ListBombs, TBoard, TListPlayers, TListBombs),
-	managementBomb(0, TBoard, TListPlayers, TListBombs, NewBoard, NewListPlayers, NEwListBombs),
-	setModel(NewBoard, NewListPlayers, NewListBombs),
-      	reply_json(json([players=ListPlayers, bombs=NewListBombs, board=NewBoard])).
+	%managementBomb(0, TBoard, TListPlayers, TListBombs, NewBoard, NewListPlayers, NewListBombs),
+	setModel(TBoard, TListPlayers, TListBombs),
+      	reply_json(json([players=TListPlayers, bombs=TListBombs, board=TBoard])).
 
 % Function    :	managementBomb
 % Objective   :	manage the bomb 
@@ -618,13 +623,15 @@ plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex
 % Function    : playersBeat
 % Objective   : Instant T movement all players
 % Parameter 1 : Index of player
-% Parameter 2 : The list of player                    
+% Parameter 2 : The list of player
+playersBeat(_, NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
 playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
 	nth0(5, Player, IA),
-	ia(IA, Player, Board, ListBombs, Bomb, Direction),
+	%ia(IA, Player, Board, ListBombs, Bomb, Direction),
+	ia_random(IndexPlayer,Bomb,Direction),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
-	playersBeat(NewIndexPlayer, Board, T, TListBombs, TBoard, NewT, NewListBombs).
+	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
 
 
 % Function    :	applyAction 
@@ -696,13 +703,13 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x'],
-          ['x','_','_','o','o','o','_','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
           ['x','_','x','o','x','o','x','_','x'],
-          ['x','o','o','o','o','o','o','o','x'],
-          ['x','o','x','o','x','o','x','o','x'],
-          ['x','o','o','o','o','o','o','o','x'],
+          ['x','_','o','o','o','o','o','_','x'],
           ['x','_','x','o','x','o','x','_','x'],
-          ['x','_','_','o','o','o','_','_','x'],
+          ['x','_','o','o','o','o','o','_','x'],
+          ['x','_','x','o','x','o','x','_','x'],
+          ['x','_','_','_','_','_','_','_','x'],
           ['x','x','x','x','x','x','x','x','x']
           ].
 
