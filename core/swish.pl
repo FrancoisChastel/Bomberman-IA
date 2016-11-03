@@ -607,6 +607,21 @@ WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
 
 %%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Function    :	explosions
+% Objective   :	manage the explosion on the board and for the player but
+%		not on the list of bombs /!\
+% Parameter 1 :	Board
+% Parameter 2 :	Players
+% Parameter 3 :	List of explosing bombs (coordinates)
+% Parameter 4 :	New board
+% Parameter 5 :	New players
+explosions(NewBoard, NewPlayers, [], NewBoard, NewPlayers):- !.
+explosions(Board, Players, [[X,Y,Eb]|Tb], NewBoard, NewPlayers):-
+	explosions(Board, Players, Tb, TBoard, TPlayers),
+	bombExplode(TBoard, X, Y, Eb, TPlayers, NewPlayers, NewBoard), !.
+explosions(NewBoard, NewPlayers, [], NewBoard, NewPlayers):- !.
+
+
 % Function    :	BombExplode
 % Parameter 1 :	Board 
 % Parameter 2 :	x-axis of the bomb
@@ -624,9 +639,10 @@ bombExplode(Board, Xb, Yb, Eb, ListOfPlayers, NewListOfPlayers, NewBoard) :-
 %- Spread in a line of the explosion
 lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board, NewPlayers = Players, !.
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		destructibleBlock(TElem), destroyBlock(Board, Xb, Yb, NewBoard), NewPlayers = Players.
+		destructibleBlock(TElem), destroyBlock(Board, Xb, Yb, NewBoard), NewPlayers = Players, !.
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		not(block(TElem)), TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), killPlayers(Xb, Yb, Players, TPlayers) ,lineExplode(Board, TXb, TYb, TEb, TPlayers, NewPlayers, NewBoard, Direction) .
+		not(block(TElem)), TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), killPlayers(Xb, Yb, Players, TPlayers) ,lineExplode(Board, TXb, TYb, TEb, TPlayers, NewPlayers, NewBoard, Direction), !.
+lineExplode(NewBoard, _, _, _, NewPlayers, NewPlayers, NewBoard, _):- !.
 		
 
 % Function    :	DestroyBlock
@@ -640,7 +656,7 @@ destroyBlock( Board, Xe, Ye, NewBoard):-
 		random(0, 5, Probability), (
 			 ( Probability is 0, capacite(Bonus), updateBoard(Board, Xe, Ye, Bonus, NewBoard));
 			 ( Probability is 1, puissance(Bonus), updateBoard(Board, Xe, Ye, Bonus, NewBoard)); 
-			 ( path(Path), updateBoard( Board, Xe, Ye, Path, NewBoard ))).
+			 ( path(Path), updateBoard( Board, Xe, Ye, Path, NewBoard ))), !.
 
 
 % Function    :	KillPlayers
@@ -661,6 +677,7 @@ killPlayers( Xd, Yd, [Hp|Tp], [Hn|Tn]):- killPlayers( Xd, Yd, Tp, Tn),
 % Parameter 2 :	killed player
 killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer). 
 
+
 %- A game turn
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
@@ -668,6 +685,15 @@ turn(_Request) :-
 	playersBeat(0, NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
 	setModel(TBoard, TListPlayers, TListBombs),
       	reply_json(json([players=TListPlayers, bombs=TListBombs, board=TBoard])).
+
+
+%- Manage all the explosion
+bombsManagement(Board, ListPlayer, ListsBombs, NewBoard, NewListPlayer, NewBombs):-
+	decrementBombsOfPlayers(ListsBombs, DListsBombs),
+	explodingBombsOfPlayers(DListsBombs, BombsExplosing),
+	explosion(Board, ListPlayer, BombsExplosing, NewBoard, NewListPlayer),
+	deleteExplodedBombs(DListsBombs, BombsExplosing, NewBombs), !.
+
 
 % Function    :	managementBomb
 % Objective   :	manage the bomb 
@@ -678,35 +704,93 @@ turn(_Request) :-
 % Parameter 5 :	New list of players
 % Parameter 6 :	New list of bombs
 % Parameter 7 : Recursive list param
-managementBomb(_, NewBoard, NewPlayers, NewBombs,NewBoard,NewPlayers,NewBombs,[]):- !. % Stops when RecurParam is empty
-managementBomb(IndexPlayer, Board, ListPlayers, ListBombs, NewBoard, NewPlayers, NewBombs,[CurrPlayer|RecurParamPlayerList]):-
-	nth0(IndexPlayer, ListBombs, ListBombsOfPlayer),
-	checkBombsOfPlayer(0, IndexPlayer, Board, ListPlayers, ListBombsOfPlayer, TBoard, TPlayers, TBombsOfPlayer, ListBombsOfPlayer),
-	updateList(IndexPlayer, TBombsOfPlayer, ListBombs, TBombs),
-	NewIndexPlayer is IndexPlayer+1,
-	managementBomb(NewIndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs, RecurParamPlayerList), !.
+managementBomb(NewBoard, [], [], NewBoard, [], []):- !.
+managementBomb(Board, [Hp|Tp], [Hb|Tb], NewExploding):-
+	checkBomb(Board, Hp, Hb, TBoard, )	
+	managementBomb(TBoard, Tp, Tb, NewBoard, NewPlayers, NewBombs).
 
-%- check bombs for player
-checkBombsOfPlayer(_, _, NewBoard, NewPlayers, NewBombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[]):- !.
-checkBombsOfPlayer(IndexBomb, IndexPlayer, Board, Players, BombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[CurrBomb|RecurParamBombList]):-
-	nth0(2, CurrBomb, Counter),
-	checkBombExplosion( IndexBomb, Board, Players, CurrBomb, BombsOfPlayer, TBoard, TPlayers, TBombs, Counter),
-	NewIndexBomb is IndexBomb +1,
-	checkBombsOfPlayer( NewIndexBomb, IndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombsOfPlayer,RecurParamBombList).
 
-%- check explosion of the bomb
-checkBombExplosion( _, Board, ListPlayers, Bomb, BombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer, 0):-
-	nth0( 0, Bomb, Xb),
-	nth0( 1, Bomb, Yb),
-	nth0( 3, Bomb, Eb),
-	bombExplode( Board, Xb, Yb, Eb, ListPlayers, NewPlayers, NewBoard),
-	delete(BombsOfPlayer, Bomb, NewBombsOfPlayer), !.
+% Function    :	decrementBombsOfPlayers
+% Objective   :	decrement all the bombs of the players (counter)
+% Parameter 1 :	List of bombs
+% Parameter 2 :	List of bombs decremented
+decrementBombsOfPlayers([], []):- !.
+decrementBombsOfPlayers([H|T], [Hn|Tn]):-
+	decrementBombsOfPlayer(H, Hn),
+	decrementBombsOfPlayers(T, Tn), !.
+decrementBombsOfPlayers([], []):- !.
 
-checkBombExplosion( IndexBomb, NewBoard, NewListPlayers, Bomb, BombsOfPlayer, NewBoard, NewListPlayers, NewBombsOfPlayer, _):-
-	nth0( 2, Bomb, CountTimeBomb),
-	NewCountTimeBomb is CountTimeBomb-1, 
-	updateList( 2, NewCountTimeBomb, Bomb, NewBomb),
-	updateList( Indexbomb, NewBomb, BombsOfPlayer, NewBombsOfPlayer), !.
+
+% Function    :	decrementBombsOfPlayer
+% Objective   :	decrement all the bombs of a player (counter)
+% Parameter 1 :	List bombs of player
+% Parameter 2 :	List bombs of player decremented
+decrementBombsOfPlayer([],[]):- !.
+decrementBombsOfPlayer([[X,Y,0,P|Tb]|T], [[X,Y,0,P|Tb]|Tn]):-
+	decrementBombsOfPlayer(T, Tn), !.
+decrementBombsOfPlayer([[X,Y,C,P|Tb]|T], [[X, Y, Cn, P|Tb]|Tn]):-
+	Cn is C-1,
+	decrementBombsOfPlayer(T, Tn), !.
+decrementBombsOfPlayer([],[]):- !.
+
+
+% Function    :	explodingBombsOfPlayers
+% Objective   :	get exploding bombs for all the players
+% Parameter 1 :	List of bombs
+% Parameter 2 :	List of exploding bomb.
+explodingBombsOfPlayers([H|T], NewList):-
+	explodingBombsOfPlayers(T, TList),
+	explodingBombsOfPlayer(H, TTList),
+	append(TTList, TList, NewList), !. 
+explodingBombsOfPlayers([],[]):- !.	
+
+
+% Function    :	explodingBombsOfPlayer
+% Objective   :	get exploding bombs for a player
+% Parameter 1 :	list of bombs of a player
+% Parameter 2 :	list of bombs with coordinates that will explose	
+explodingBombsOfPlayer([], []):- !.
+explodingBombsOfPlayer([[X,Y,0,P|_]|T], [[X,Y,P]|Te]):- explodingBombsOfPlayer(T, Te).
+explodingBombsOfPlayer([_|T], NewList):- explodingBombsOfPlayer(T, NewList), !.
+explodingBombsOfPlayer([], []):- !.
+
+
+% Function    :	deleteExplodedBombs
+% Objective   :	
+% Parameter 1 :	List of bombs
+% Parameter 2 :	List of exploded bombs
+% Parameter 3 :	New list of bombs
+deleteExplodedBombs(NewBombs, [], NewBombs):- !.
+deleteExplodedBombs(ListBombs, [Hb|Tb], NewBombs):-
+	deleteExplodedBombs(ListBombs, Tb, TBombs),
+	deleteBombOfPlayersFromCoordinates( TBombs, Hb, NewBombs), !.
+deleteExplodedBombs(NewBombs, [], NewBombs):- !.
+
+
+% Function    :	deleteBombOfPlayersFromCoordinates
+% Objective   :	
+% Parameter 1 : 
+% Parameter 2 : 
+% Parameter 3 :	
+deleteBombOfPlayersFromCoordinates( [], _, []):- !.
+deleteBombOfPlayersFromCoordinates( [H|T], Coordinates, [Hn|Tn]):-
+	deleteBombOfPlayersFromCoordinates(T, Coordinates, Tn),
+	deleteBombOfAPlayerFromCoordinates(H, Coordinates, Hn), !.
+deleteBombOfPlayersFromCoordinates( [], _, []):- !.
+
+
+% Function    :	deleteBombOfAPlayerFromCoordinates
+% Objective   :	delete a bomb of a player in function of the coordinates
+% Parameter 1 :	List of bombs
+% Parameter 2 :	Coordinates
+% Parameter 3 :	New list of bombs
+deleteBombOfAPlayerFromCoordinates( [], _, []):- !.
+deleteBombOfAPlayerFromCoordinates( [[X,Y|_]|T], [X,Y,_], Tn):-
+	deleteBombOfAPlayerFromCoordinates(T, [X,Y,_], Tn), !.
+deleteBombOfAPlayerFromCoordinates( [H|T], [X,Y,_], [H|Tn]):-
+	deleteBombOfAPlayerFromCoordinates(T, [X,Y,_], Tn), !.
+deleteBombOfAPlayerFromCoordinates( [], _, []):- !.
+
 
 % Function    :	GetModel
 % Objective   :	Return the get model of datas that will be use in the game
