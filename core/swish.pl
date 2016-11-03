@@ -485,7 +485,9 @@ ia(2,IndexPlayer,PlayersList,Board,BombList,NextMove) :-
     createPonderatedList(X,Y,Board,BombList,PlayersList,PonderatedList),
     max_list(PonderatedList,Max),
     nth0(Choice,PonderatedList,Max),
-    NextMove is Choice.
+    NextMove is Choice-1,
+    writeln('Fin du joueur'),
+    !.
 
 
 
@@ -497,7 +499,6 @@ branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
     ValueGlobal is Value.
 
 branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
-
     Index is It+1,
     branch(Index,X,Y,Board,PlayerList,BombList,Value0),
     Y0 is Y-1,branch(Index,X,Y0,Board,PlayerList,BombList,Value1),
@@ -549,8 +550,6 @@ dangerWeight(_,_,_,0).
 % Parameter 3 		   : Board
 % Parameter 4 / Return : Number way available
 nbChoiceAvailable(X,Y,Board,Val):-
-writeln(X),
-writeln(Y),
 X1 is X+1, availableWeight(X1,Y,Board,Value1),
 Y1 is Y-1, availableWeight(X,Y1,Board,Value2),
 X2 is X-1, availableWeight(X2,Y,Board,Value3),
@@ -765,6 +764,7 @@ playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT
 	%ia(IA, Player, Board, ListBombs, Bomb, Direction),
 	%iaAggresive(IndexPlayer,Bomb,Direction),
     ia(2,IndexPlayer,[Player|T],Board,ListBombs,NextMove),
+    writeln(NextMove),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
 	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
