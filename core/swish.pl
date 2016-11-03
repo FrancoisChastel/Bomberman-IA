@@ -1,4 +1,4 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Author(s):    N.Haim, F.Chastel, C.Aparicio, A.Payan && A.Breton   	%
 % Creation:     20/09/2016                                      	%
 % Version :     v0.1                                           		%
@@ -681,7 +681,7 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 %- A game turn
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
-	managementBomb(0, Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs, ListPlayers),
+	bombsManagement(Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs),
 	playersBeat(0, NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
 	setModel(TBoard, TListPlayers, TListBombs),
       	reply_json(json([players=TListPlayers, bombs=TListBombs, board=TBoard])).
