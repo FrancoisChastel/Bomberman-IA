@@ -12,9 +12,9 @@
 
     </head>
     <body>
-    <h1>Bomberman</h1>
+    <h1 style="text-align: center">Bomberman</h1>
     <form>
-    <div style="margin: auto;width:30%">
+    <div id="settings" class="row" style="margin-left:auto;margin-right: auto;margin-top: 40px;width:40%">
         <div class="form-group" style="margin: auto;width:200px">
             <label>Server address<input class="form-control" style="width:auto" type="textaera" id="servAddress"></label><br>
         </div>
@@ -29,13 +29,17 @@
         </div>
     </div>
     </form>
-    <div id="result">-</div>
+    <div style="width:90%;margin-left:auto;margin-right: auto;margin-top: 40px;" class="row" id="game">
+        <div id="infoPlayers" class="col-md-5"></div>
+        <div id="result" class="col-md-7"></div>
+    </div>
 
     <script>
         var players = [];
-        var oldPlayers = [];
+        var oldOccupants = [];
         var board = [];
         var bombs = [];
+        var server;
         $('#numberPlayers').change(function()
         {
             var numberPlayers = $('#numberPlayers').val();
@@ -52,24 +56,26 @@
         function request()
         {
             var playersIA="";
-            var url = $('#servAddress').val();
+            server = $('#servAddress').val();
             var selectsIA = document.getElementsByClassName('playersIA');
             for(var i=0;i<selectsIA.length;i++)
             {
                 playersIA+=parseInt(selectsIA[i].selectedOptions[0].value);
             }
             $.ajax({
-                url:url+'init',
+                url:server+'init',
                 type:'POST',
                 crossDomain : true,
                 data : {playersIA : playersIA},
                 dataType:'json',
                 success:function(data)
                 {
-                    oldPlayers = data['players'];
+                    $('#settings').remove();
+                    oldOccupants = data['players'];
                     players = data['players'];
                     board = data['board'];
-                    display();
+                    displayInfoPlayers();
+                    displayBoard();
                     setTimeout(motor,2000);
                 }
             })
@@ -77,9 +83,8 @@
         function motor()
         {
             //Appel ajax beat
-            var url = $('#servAddress').val();
             $.ajax({
-                url:url+'turn',
+                url:server+'turn',
                 type:'GET',
                 dataType:'json',
                 success:function(data)
@@ -90,8 +95,9 @@
                     var gameOver = false;
                     if(!gameOver)
                     {
-                        display();
-                        setTimeout(motor,2000);
+                        displayInfoPlayers();
+                        transitionBoard();
+                        setTimeout(motor,1000);
                     }
                     else 
                     {
@@ -105,7 +111,7 @@
             });
         }
 
-        function display()
+        function displayBoard()
         {
             var occupants = getNumberOfOccupants();
             var contenu = '<table id="map" border="0" cellspacing="0" cellpadding="0">';
@@ -140,27 +146,27 @@
                                 {
                                     contenu+='<img id="block" src="img/grass.png" style="position: relative; top: 0; left: 0;z-index:1;">';
                                 }
-                                contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 8px; left: 8px;z-index:2">';
+                                contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 8px;z-index:2">';
 
                                 switch(occupants[n][2])
                                 {
                                     case 1:
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 8px; left: 8px;z-index:2">';
+                                        contenu+='<img src="img/betty.png" class="betty" style="position: absolute; top: 8px; left: 8px;z-index:2">';
                                         break;
                                     case 2:
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 8px; left: 2px;z-index:2">';
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 8px; left: 14px;z-index:3">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 2px;z-index:2">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 14px;z-index:3">';
                                         break;
                                     case 3:
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 2px; left: 8px;z-index:2">';
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 14px; left: 2px;z-index:3">';
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 14px; left: 14px;z-index:4">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 8px;z-index:2">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 2px;z-index:3">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 14px;z-index:4">';
                                         break;
                                     case 4:
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 2px; left: 2px;z-index:2">';
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 14px; left: 14px;z-index:3">';
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 14px; left: 2px;z-index:4">';
-                                        contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 2px; left: 14px;z-index:5">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 2px;z-index:2">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 14px;z-index:3">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 2px;z-index:4">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 14px;z-index:5">';
                                         break;
                                 }
 
@@ -186,7 +192,89 @@
             }
             contenu+='</table>';
             $("#result").html(contenu);
-
+        }
+        
+        function transitionBoard()
+        {
+            for(var i=0;i<players.length;i++)
+            {
+                var diffX = players[i][1]-oldPlayers[i][1];
+                var diffY = players[i][0]-oldPlayers[i][0];
+                if(diffX!=0)
+                {
+                    if(diffX>0)
+                    {
+                        $('#betty'+i).each(function()
+                        {
+                            $(this).css( "left" , $(this).css( "left" )+32);
+                        });
+                    }
+                    else 
+                    {
+                        $('#betty'+i).each(function()
+                        {
+                            $(this).css( "left" , $(this).css( "left" )-32);
+                        });
+                    }
+                }
+                else 
+                {
+                    if(diffY>0)
+                    {
+                        $('#betty'+i).each(function()
+                        {
+                            $(this).css( "top" , $(this).css( "top" )+32);
+                        });
+                    }
+                    else
+                    {
+                        $('#betty'+i).each(function()
+                        {
+                            $(this).css( "top" , $(this).css( "top" )-32);
+                        });
+                    }
+                }
+            }
+            setTimeout(displayBoard,1000);
+        }
+        
+        function displayInfoPlayers()
+        {
+            var contenu = '<h2>Information des joueurs</h2>';
+            contenu += '<table style="width:90%;margin: auto" class="table table-hover">';
+            contenu+='<thead><tr><th>Joueur</th><th>X</th><th>Y</th><th>Puissance</th><th>En vie</th><th>IA</th></tr></thead><tbody>';
+            for(var i=0;i<players.length;i++)
+            {
+                contenu+='<tr>';
+                contenu+='<td>Joueur '+(i+1)+'</td>';
+                contenu+='<td>'+players[i][0]+'</td>';
+                contenu+='<td>'+players[i][1]+'</td>';
+                contenu+='<td>'+players[i][3]+'</td>';
+                switch (players[i][4])
+                {
+                    case 0:
+                        contenu+='<td>Oui</td>';
+                        break;
+                    default:
+                        contenu+='<td>Non</td>';
+                        break;
+                }
+                switch (players[i][5])
+                {
+                    case 0:
+                        contenu+='<td>Aléatoire</td>';
+                        break;
+                    case 1:
+                        contenu+='<td>Aggressive</td>';
+                        break;
+                    case 2:
+                        contenu+='<td>Max</td>';
+                        break;
+                }
+                contenu+='</tr>';
+            }
+            contenu+='</tbody></table>';
+            $('#infoPlayers').html(contenu);
         }
 
         function getNumberOfOccupants()
@@ -202,13 +290,13 @@
                 {
                     if(players[i][0]==players[j][0] && players[i][1]==players[j][1])
                     {
-                        occupants[i]=[players[j][0],players[j][1],++numberOccupants];
+                        occupants[i]=[players[j][0],players[j][1],++numberOccupants,j];
                         moreThanOne=true;
                     }
                 }
                 if(!moreThanOne)
                 {
-                    occupants[i]=[players[j][0],players[j][1],numberOccupants]
+                    occupants[i]=[players[j][0],players[j][1],numberOccupants,j]
                 }
             }
             for(i=0;i<occupants.length;i++)

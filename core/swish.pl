@@ -838,7 +838,7 @@ plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex
 playersBeat(_, NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
 playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
 	nth0(5,Player,IA),
-    ia(0,IndexPlayer,[Player|T],Board,ListBombs,Bomb,Direction),
+    ia(1,IndexPlayer,[Player|T],Board,ListBombs,Bomb,Direction),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
 	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
