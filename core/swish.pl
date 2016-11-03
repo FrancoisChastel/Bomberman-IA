@@ -355,11 +355,10 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 
 %%%%%%%%%%%%%%%% IA RANDOM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ia_random(IndexPlayer,Bomb,NextMove):-
-	 repeat, 
-	 playersList(PlayerList),
+ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
+	 repeat,
 	 nth0(IndexPlayer,PlayerList,[X,Y,_,Power,Dead,Ia]),
-	 board(Board),	
+     Bomb = 0,
 	 random_between(-1,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -378,11 +377,7 @@ ia_random(IndexPlayer,Bomb,NextMove):-
 %        - 1 : right
 %        - 2 : down
 %        - 3 : left
-iaAggresive(IndexPlayer,Bomb,NextMove):-              
-  % Get Global Variable
-    bombsList(BombList),
-    board(Board),
-    playersList(PlayerList),
+ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     nth0(IndexPlayer,PlayerList,[X,Y,_,Power,_,_]),
     checkNextTarget(IndexPlayer,PlayerList,[TargetX,TargetY]),
   % ------------------------------------
@@ -487,12 +482,13 @@ dropBomb(_,_,_,0).
 %%%%%%%%%%%%%% IA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-ia(2,IndexPlayer,PlayersList,Board,BombList,NextMove) :-
+ia(2,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     nth0(IndexPlayer,PlayersList,[X,Y,_,_,_,_]),
     createPonderatedList(X,Y,Board,BombList,PlayersList,PonderatedList),
     max_list(PonderatedList,Max),
     nth0(Choice,PonderatedList,Max),
     NextMove is Choice-1,
+    Bomb = 0,
     writeln('Fin du joueur'),
     !.
 
@@ -546,8 +542,8 @@ moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,
 % Parameter 3 		   : List of bombs
 % Parameter 4 / Return : Value of weight
 
-dangerWeight(X,Y,ListBomb,1):- danger(X,Y,ListBomb).
-dangerWeight(_,_,_,0).
+dangerWeight(X,Y,ListBomb,0):- danger(X,Y,ListBomb).
+dangerWeight(_,_,_,1).
 
 
 % Function 			   : nbChoiceAvailable
@@ -839,7 +835,7 @@ playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT
 	nth0(5, Player, IA),
 	%ia(IA, Player, Board, ListBombs, Bomb, Direction),
 	%iaAggresive(IndexPlayer,Bomb,Direction),
-    ia(2,IndexPlayer,[Player|T],Board,ListBombs,NextMove),
+    ia(2,IndexPlayer,[Player|T],Board,ListBombs,Direction),
     writeln(NextMove),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
