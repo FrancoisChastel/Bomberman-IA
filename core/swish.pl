@@ -579,22 +579,6 @@ CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue):-
 
 %%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Function    :	CheckBombs
-% Parameter 1 :	Board
-% Parameter 2 :	List of players
-% Parameter 3 :	List of bombs
-% Parameter 4 :	New board
-% Parameter 5 :	New list of players
-% Parameter 6 :	New list of bombs
-checkBombs( Board, ListOfPlayers, [], Board, ListOfPlayers, []).
-checkBombs( Board, ListOfPlayers, [Hb|Tb], NewBoard, NewListOfPlayers, [Hnb|Tnb]):-
-		checkBombs( Board, ListOfPlayers, Tb, TBoard, TListOfPlayers, Tnb), 
-		( nth0(2, Hb, TDecompte) is 1 )->
-			( nth0(0, Hb, Xb), nth0(1, Hb, Yb), nth0(2, Hb, Eb), bombExplode( TBoard, Xb, Yb, Eb, TlistOfPlayers, NewListOfPlayer, NewBoard) );
-			( NDecompte is TDecompte-1, replaceList(2, NDecompte, Hb, Hnb),
-			NewBoard = Board, NewListOfPlayers = NewListOfPlayers ).
-
-
 % Function    :	BombExplode
 % Parameter 1 :	Board 
 % Parameter 2 :	x-axis of the bomb
@@ -608,15 +592,15 @@ bombExplode(Board, Xb, Yb, Eb, ListOfPlayers, NewListOfPlayers, NewBoard) :-
 						lineExplode(Board, Xb, Yb, Eb, ListOfPlayers, TPlayers0, TBoard0, 0),
 						lineExplode(TBoard0, Xb, Yb, Eb, TPlayers0, TPlayers1, TBoard1, 1),
 						lineExplode(TBoard1, Xb, Yb, Eb, TPlayers1, TPlayers2, TBoard2, 2),
-						lineExplode(TBoard2, Xb, Yb, Eb, TPlayers2, NewListOfPlayers, NewBoard, 3).
+						lineExplode(TBoard2, Xb, Yb, Eb, TPlayers2, NewListOfPlayers, NewBoard, 3), !.
 %- Spread in a line of the explosion
-lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board, NewPlayers = Players.
+lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board, NewPlayers = Players, !.
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
 		destructibleBlock(TElem), destroyBlock(Board, Xb, Yb, NewBoard), NewPlayers = Players.
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
 		not(block(TElem)), TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), lineExplode(Board, TXb, TYb, TEb, Players, NewPlayers, NewBoard, Direction).
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		NewBoard = Board, killPlayers(Xb, Yb, Players, NewPlayers).
+		killPlayers(Xb, Yb, Players, NewPlayers), .
 		
 
 % Function    :	DestroyBlock
@@ -639,10 +623,10 @@ destroyBlock( Board, Xe, Ye, NewBoard):-
 % Parameter 2 :	y-axis of the destroyed object
 % Parameter 3 :	ListOfPlayers
 % Parameter 4 :	NewListOfPlayers
-killPlayers( _, _, [], []).
+killPlayers( _, _, [], []):- !.
 killPlayers( Xd, Yd, [Hp|Tp], [Hn|Tn]):- killPlayers( Xd, Yd, Tp, Tn), 
-		( nth0(0, Hp, Xd), nth0(1, Hp, Yd), killPlayer(Hp, Hn) );
-		( Hn = Hp ).
+		(( nth0(0, Hp, Xd), nth0(1, Hp, Yd), killPlayer(Hp, Hn) );
+		( Hn = Hp, !)).
 		
 
 % Function    :	killPlayer
@@ -727,16 +711,21 @@ setModel( NewBoard, NewListOfPlayers, NewListOfBombs):-
 % Objective   :	Implant Bomb
 % Return      :	true -> Bomb implanted / false -> Bomb not implanted
 % Parameter 1 :	Index of player which implant the bomb
-implantBomb(PlayerIndex, Board, [X,Y,NbMaxBomb,PowerPlayer], ListAllBomb, NewListAllBomb):-
+implantBomb(PlayerIndex, Board, [X,Y,NbMaxBomb,PowerPlayer|T], ListAllBomb, NewListAllBomb):-
     	countTimeBomb(CountTimeBomb),
     	nth0(PlayerIndex, ListAllBomb, ListBombImplantByPlayer),
     	length(ListBombImplantByPlayer,Length),
-	plantBomb((Length<NbMaxBomb),ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer,ListAllBomb,NewListAllBomb), !.
+	Length < NbMaxBomb,
+	plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex, ListAllBomb,NewListAllBomb), !.
+implantBomb(PlayerIndex, Board, [X,Y,NbMaxBomb,PowerPlayer|T], ListAllBomb, NewListAllBomb):-
+    	countTimeBomb(CountTimeBomb),
+    	nth0(PlayerIndex, ListAllBomb, ListBombImplantByPlayer),
+    	plantBomb(0,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex,ListAllBomb,NewListAllBomb), !.
+
 %- planBomb
 plantBomb(0,_,_,_,_,_,_,ListAllBomb,ListAllBomb):- !.
 plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex, ListAllBomb, NewListAllBomb):- 
    	append(ListBombImplantByPlayer, [[X,Y,CountTimeBomb,PowerPlayer]], NewListBombImplantByPlayer),
-    	updateListofListWithOneParameter(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
 	updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb), !.
 
 
