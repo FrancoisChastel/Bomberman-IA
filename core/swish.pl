@@ -695,7 +695,7 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
 	bombsManagement(Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs),
-	playersBeat(0, NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
+	playersBeat(NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
 	setModel(TBoard, TListPlayers, TListBombs),
       	reply_json(json([players=TListPlayers, bombs=TListBombs, board=TBoard])).
 
