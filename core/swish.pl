@@ -354,6 +354,7 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 
 %%%%%%%%%%%%%%%% IA RANDOM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
+<<<<<<< HEAD
 	repeat,
 	nth0(IndexPlayer,PlayersList,[X,Y|T]),
     	Bomb = 0,
@@ -361,6 +362,12 @@ ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 	move(NextMove,X,Y,NewX,NewY),
 	accessible(Board,NewX,NewY), 
 	!.
+=======
+	 repeat,
+	 nth0(IndexPlayer,PlayersList,[X,Y,_,Power,Dead,Ia]),
+     Bomb = 0,
+	 random_between(-1,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
+>>>>>>> 25e7f52de10aca08dc3b1d00eb0030c873fffb76
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -465,7 +472,7 @@ actionSquare(_,'_',X,Y,NextX,NextY,Bomb,NextMove):-
       move(NextMove,X,Y,NextX,NextY).
 %------------------------------------------------  
 
-dropBomb(X,Y,Board,Bomb):- nth0(Y,Board,Line),nth0(X,Line,Square),bomb(Square),Bomb=1.
+dropBomb(X,Y,Board,Bomb):- nth0(Y,Board,Line),nth0(X,Line,Square),not(bomb(Square)),Bomb=1.
 dropBomb(_,_,_,0).
 
 
@@ -490,7 +497,6 @@ ia(2,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     nth0(Choice,PonderatedList,Max),
     NextMove is Choice-1,
     Bomb = 0,
-    writeln('Fin du joueur'),
     !.
 
 
@@ -513,13 +519,25 @@ branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
     ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
 
 
-createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
+createPonderatedList(X,Y,Board,BombList,PlayerList,Bomb,List) :-
     branch(0,X,Y,Board,PlayerList,BombList,Value1),
     A is Y-1,branch(0,X,A,Board,PlayerList,BombList,Value2),
     B is X+1,branch(0,B,Y,Board,PlayerList,BombList,Value3),
     C is Y+1,branch(0,X,C,Board,PlayerList,BombList,Value4),
     D is X-1,branch(0,D,Y,Board,PlayerList,BombList,Value5),
-    List = [Value1,Value2,Value3,Value4,Value5].
+    ((bombWorthIt([[X,A],[B,Y],[X,C],[D,Y]],Board,DropIt), DropIt = 1) ;(dropBomb(X,Y,Board,Bomb),Bomb = 1)),
+    List = [Value1,Value2,Value3,Value4,Value5],
+    Bomb = DropIt.
+
+
+%Function              : bombWorthIt
+%Aim                   : Should the IA drop bomb or not
+
+bombWorthIt([[X,Y]|T],Board,1) :-
+   nth0(Y, Board, Line),nth0(X, Line, Square), destructibleBlock(Square).
+bombWorthIt(_,_,_,0).
+
+
 
 
 % Function 			   : rapprochement
@@ -529,6 +547,11 @@ createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
 % Parameter 3 		   : PlayerList
 % Parameter 4 / Return : Number way available
 rapprochement(_,_,[],[]).
+
+rapprochement(XTarget,YTarget,[[XTarget,YTarget|_]|T],TailRapprochement):-
+rapprochement(XTarget,YTarget,T,TailRapprochement).
+
+
 rapprochement(XTarget,YTarget,[[XEnnemy,YEnnemy|_]|T],[ValRapprochement|TailRapprochement]):-
 	rapprochement(XTarget,YTarget,T,TailRapprochement), moreCloser(XTarget,YTarget,XEnnemy,YEnnemy,ValRapprochement).
 
@@ -824,6 +847,7 @@ plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex
 % Objective   : Instant T movement all players
 % Parameter 1 : Index of player
 % Parameter 2 : The list of player
+<<<<<<< HEAD
 playersBeat(NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
 playersBeat(Board, Players, ListBombs, NewBoard, NewPlayers, NewListBombs):- 
 	playersAction(Board, Players, Bobms, ActionsPlayers),
@@ -869,6 +893,15 @@ playersTAction(-1, _, _, _, []):- !.
 playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
 	nth0(IndexPlayer, Players, [_, _, _, _, _, Ia]),
 	ia(Ia, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
+=======
+playersBeat(_, NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
+playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
+	nth0(5,Player,IA),
+    ia(1,IndexPlayer,[Player|T],Board,ListBombs,Bomb,Direction),
+	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
+	NewIndexPlayer is IndexPlayer+1,
+	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
+>>>>>>> 25e7f52de10aca08dc3b1d00eb0030c873fffb76
 
 
 % Function    :	applyAction 

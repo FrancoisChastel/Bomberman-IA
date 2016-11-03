@@ -9,7 +9,7 @@ table,tr,td
     border-collapse: collapse;
     border: none;
 }
-tr,td,img{
+img{
     display:flex;
 }
 body
