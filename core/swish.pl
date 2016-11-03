@@ -133,7 +133,34 @@ applyMove(Player, Direction, NewPlayer):-
 		updateList(0, NewX, Player, TInfoPlayer),
 		updateList(1, NewY, TInfoPlayer, NewPlayer).		
 
+% Function    :	ObtainBonus
+% Objective   :	Get if possible a bonus
+% Parameter 1 :	Board
+% Parameter 2 :	ListPlayers
+% Parameter 3 :	New Board
+% Parameter 4 :	New players
+obtainBonus( Board, Player, NewBoard, NewPlayer):-
+	nth0(0, Player, X),
+	nth0(1, Player, Y),
+	nth0(Y, Board, TLine),
+	nth0(X, TLine, TElem),
+	capacite(TElem),
+	nth0(2, Player, Capacite),
+	NewCapacite is Capacite+1,
+	updateList(2, Player, NewCapacite).
+obtainBonus( Board, Player, NewBoard, NewPlayer):-
+	nth0(0, Player, X),
+	nth0(1, Player, Y),
+	nth0(Y, Board, TLine),
+	nth0(X, TLine, TElem),
+	puissance(TElem),
+	nth0(3, Player, Puissance),
+	NewPuissance is Puissance+1,
+	updateList(3, Player, NewPuissance).
+obtainBonus( NewBoard, NewPlayer, NewBoard, NewPlayer).
 
+
+		
 % Function    : Accessible
 % Objective   : Know if a point is accessible for a player
 % Parameter 1 : Board concerned (need to be well-formed) that will be targeted
@@ -603,9 +630,7 @@ lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
 		destructibleBlock(TElem), destroyBlock(Board, Xb, Yb, NewBoard), NewPlayers = Players.
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		not(block(TElem)), TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), lineExplode(Board, TXb, TYb, TEb, Players, NewPlayers, NewBoard, Direction).
-lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		killPlayers(Xb, Yb, Players, NewPlayers), .
+		not(block(TElem)), TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), killPlayers(Xb, Yb, Players, TPlayers) ,lineExplode(Board, TXb, TYb, TEb, TPlayers, NewPlayers, NewBoard, Direction) .
 		
 
 % Function    :	DestroyBlock
