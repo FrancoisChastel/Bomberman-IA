@@ -395,7 +395,7 @@ ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 %        - 2 : down
 %        - 3 : left
 ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
-    nth0(IndexPlayer,PlayerList,[X,Y,_,Power,_,_]),
+    nth0(IndexPlayer,PlayersList,[X,Y,_,Power,_,_]),
     checkNextTarget(IndexPlayer,PlayerList,[TargetX,TargetY]),
   % ------------------------------------
   
