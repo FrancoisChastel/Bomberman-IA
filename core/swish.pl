@@ -456,26 +456,133 @@ actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
 
 %%%%%%%%%%%%%% IA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+ia(2,IndexPlayer,ListPlayer,Board,BombList,NextMove) :-
+    nth0(IndexPlayer,PlayerList,[X,Y,_,_,_,_]),
+    createPonderatedList(X,Y,Board,BombList,PlayerList,PonderatedList),
+    max_list(PonderatedList,Max),
+    nth0(Choice,PonderatedList,Max),
+    NextMove is Choice.
+
+
+
+%----------------
+%Function used by IA
+
+branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
+    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,ValueGlobal).
+
+branch(It,X,Y,ValueGlobal) :-
+
+    Index is It+1,
+    branch(Index,X,Y,Value0),
+    Y0 is Y-1,branch(Index,X,Y0,Value1),
+    X0 is X+1,branch(Index,X0,Y,Value2),
+    Y1 is Y+1,branch(Index,X,Y1,Value3),
+    X1 is X-1,branch(Index,X1,Y,Value4),
+    CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue),
+    ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
+
+
+createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
+    A is Y-1,
+    B is X+1,
+    C is Y+1,
+    D is X-1,
+    Branch(0,X,Y,Board,BombList,PlayerList,Value1),
+    Branch(0,X,A,Board,BombList,PlayerList,Value2),
+    Branch(0,B,Y,Board,BombList,PlayerList,Value3),
+    Branch(0,X,C,Board,BombList,PlayerList,Value4),
+    Branch(0,Ds,Y,Board,BombList,PlayerList,Value5),
+    List = [Value1,Value2,Value3,Value4,Value5].
+
+
+% Function 			   : rapprochement
+% Aim      			   : know if the player is closer the point
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : PlayerList
+% Parameter 4 / Return : Number way available
+rapprochement(_,_,[],[]).
+rapprochement(XTarget,YTarget,[[XEnnemy,YEnnemy|_]|T],[ValRapprochement|TailRapprochement]):-
+rapprochement(XTarget,YTarget,T,TailRapprochement), moreCloser(XTarget,YTarget,XEnnemy,YEnnemy,ValRapprochement).
+
+moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,[Distance]), Val is 1 - Distance/16.
+
+
+
+% Function 			   : dangerWeight
+% Aim      			   : to weight the danger of square
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : List of bombs
+% Parameter 4 / Return : Value of weight
+
+dangerWeight(X,Y,ListBomb,1):- danger(X,Y,ListBomb).
+dangerWeight(_,_,_,0).
+
+
+% Function 			   : nbChoiceAvailable
+% Aim      			   : Count way available
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : Board
+% Parameter 4 / Return : Number way available
+nbChoiceAvailable(X,Y,Board,Val):-
+X1 is X+1, availableWeight(X1,Y,Board,Value1),
+Y1 is Y-1, availableWeight(X,Y1,Board,Value2),
+X2 is X-1, availableWeight(X2,Y,Board,Value3),
+Y2 is Y+1, availableWeight(X,Y2,Board,Value4),
+Val is Value1 + Value2 + Value3 + Value4.
+
+
+% Function 			   : availableWeight
+% Aim      			   : to weight available way
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : Board
+% Parameter 4 / Return : Value of weight
+availableWeight(X,Y,Board,1):- nth0(Y,Board,Line), nth0(X,Line,Point), not(block(Point)).
+availableWeight(_,_,_,0).
+
+
+%totalBonus([],_,_).
+%totalBonus([[X,Y]|T],Board,Val):- bonus(X,Y,Board,RetourBonus), TotalBonus(T,Board,ValRetour), Val = ValRetour + RetourBonus.
+
+
+
+% Function 			   : bonusWeight
+% Aim      			   : to weight bonus
+% Parameter 1 		   : x-axis
+% Parameter 2 		   : y-axis
+% Parameter 3 		   : Board
+% Parameter 4 / Return : Value of weight
+bonusWeight(X,Y,Board,1):- nth0(Y, Board, Line), nth0(X, Line, Square), bonus(Square).
+bonusWeight(_,_,_,0).
+
+%Function               : isWall
+% Aim                   : avoid to take a path with a wall
+% Parameter 1           : X
+% Parameter 2           : Y
+% Parameter 3           : Board
+
+isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line;Square),wall(Square).
+isWall(_,_,_,0).
+CorrespondingWeightOfCoordinate([X,Y],Board,PlayerList,BombList,WheightValue):-
+    bonusWeight(X,Y,Board,Value0),
+    nbChoiceAvailable(X,Y,Board,Value1),
+    dangerWeight(X,Y,Board,Value2),
+    isWall(X,Y,Board,Value4),
+    rapprochement(X,Y,PlayerList,List),
+    sum_list(List,Value3),
+    WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%% Game Engine %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Function    :	CheckBombs
-% Parameter 1 :	Board
-% Parameter 2 :	List of players
-% Parameter 3 :	List of bombs
-% Parameter 4 :	New board
-% Parameter 5 :	New list of players
-% Parameter 6 :	New list of bombs
-checkBombs( Board, ListOfPlayers, [], Board, ListOfPlayers, []).
-checkBombs( Board, ListOfPlayers, [Hb|Tb], NewBoard, NewListOfPlayers, [Hnb|Tnb]):-
-		checkBombs( Board, ListOfPlayers, Tb, TBoard, TListOfPlayers, Tnb), 
-		( nth0(2, Hb, TDecompte) is 1 )->
-			( nth0(0, Hb, Xb), nth0(1, Hb, Yb), nth0(2, Hb, Eb), bombExplode( TBoard, Xb, Yb, Eb, TlistOfPlayers, NewListOfPlayer, NewBoard) );
-			( NDecompte is TDecompte-1, replaceList(2, NDecompte, Hb, Hnb),
-			NewBoard = Board, NewListOfPlayers = NewListOfPlayers ).
-
 
 % Function    :	BombExplode
 % Parameter 1 :	Board 
@@ -490,15 +597,15 @@ bombExplode(Board, Xb, Yb, Eb, ListOfPlayers, NewListOfPlayers, NewBoard) :-
 						lineExplode(Board, Xb, Yb, Eb, ListOfPlayers, TPlayers0, TBoard0, 0),
 						lineExplode(TBoard0, Xb, Yb, Eb, TPlayers0, TPlayers1, TBoard1, 1),
 						lineExplode(TBoard1, Xb, Yb, Eb, TPlayers1, TPlayers2, TBoard2, 2),
-						lineExplode(TBoard2, Xb, Yb, Eb, TPlayers2, NewListOfPlayers, NewBoard, 3).
+						lineExplode(TBoard2, Xb, Yb, Eb, TPlayers2, NewListOfPlayers, NewBoard, 3), !.
 %- Spread in a line of the explosion
-lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board, NewPlayers = Players.
+lineExplode(Board, _, _, 0, Players, NewPlayers, NewBoard, _):- NewBoard = Board, NewPlayers = Players, !.
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
 		destructibleBlock(TElem), destroyBlock(Board, Xb, Yb, NewBoard), NewPlayers = Players.
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
 		not(block(TElem)), TEb is Eb-1,  direction(Xb, Yb, Direction, TXb, TYb), lineExplode(Board, TXb, TYb, TEb, Players, NewPlayers, NewBoard, Direction).
 lineExplode(Board, Xb, Yb, Eb, Players, NewPlayers, NewBoard, Direction) :- nth0(Yb, Board, TLine), nth0(Xb, TLine, TElem),
-		NewBoard = Board, killPlayers(Xb, Yb, Players, NewPlayers).
+		killPlayers(Xb, Yb, Players, NewPlayers), .
 		
 
 % Function    :	DestroyBlock
@@ -521,10 +628,10 @@ destroyBlock( Board, Xe, Ye, NewBoard):-
 % Parameter 2 :	y-axis of the destroyed object
 % Parameter 3 :	ListOfPlayers
 % Parameter 4 :	NewListOfPlayers
-killPlayers( _, _, [], []).
+killPlayers( _, _, [], []):- !.
 killPlayers( Xd, Yd, [Hp|Tp], [Hn|Tn]):- killPlayers( Xd, Yd, Tp, Tn), 
-		( nth0(0, Hp, Xd), nth0(1, Hp, Yd), killPlayer(Hp, Hn) );
-		( Hn = Hp ).
+		(( nth0(0, Hp, Xd), nth0(1, Hp, Yd), killPlayer(Hp, Hn) );
+		( Hn = Hp, !)).
 		
 
 % Function    :	killPlayer
@@ -550,20 +657,22 @@ turn(_Request) :-
 % Parameter 5 :	New list of players
 % Parameter 6 :	New list of bombs
 % Parameter 7 : Recursive list param
-managementBomb(_, NewBoard, NewPlayers, NewBombs,NewBoard,NewPlayers,NewBombs,[]). % Stops when RecurParam is empty
+managementBomb(_, NewBoard, NewPlayers, NewBombs,NewBoard,NewPlayers,NewBombs,[]):- !. % Stops when RecurParam is empty
 managementBomb(IndexPlayer, Board, ListPlayers, ListBombs, NewBoard, NewPlayers, NewBombs,[CurrPlayer|RecurParamPlayerList]):-
-	checkBombsOfPlayer(0, IndexPlayer, Board, ListPlayers, ListBombs, TBoard, TPlayers, TBombsOfPlayer, ListBombs),
+	nth0(IndexPlayer, ListBombs, ListBombsOfPlayer),
+	checkBombsOfPlayer(0, IndexPlayer, Board, ListPlayers, ListBombsOfPlayer, TBoard, TPlayers, TBombsOfPlayer, ListBombsOfPlayer),
 	updateList(IndexPlayer, TBombsOfPlayer, ListBombs, TBombs),
 	NewIndexPlayer is IndexPlayer+1,
-	managementBomb(NewIndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs, RecurParamPlayerList).
+	managementBomb(NewIndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs, RecurParamPlayerList), !.
 
 %- check bombs for player
-checkBombsOfPlayer(_, _, NewBoard, NewPlayers, NewBombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[]).
+checkBombsOfPlayer(_, _, NewBoard, NewPlayers, NewBombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[]):- !.
 checkBombsOfPlayer(IndexBomb, IndexPlayer, Board, Players, BombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer,[CurrBomb|RecurParamBombList]):-
 	nth0(2, CurrBomb, Counter),
 	checkBombExplosion( IndexBomb, Board, Players, CurrBomb, BombsOfPlayer, TBoard, TPlayers, TBombs, Counter),
 	NewIndexBomb is IndexBomb +1,
-	checkBombsOfPlayer( NewIndexBomb, IndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombs,RecurParamBombList).
+	checkBombsOfPlayer( NewIndexBomb, IndexPlayer, TBoard, TPlayers, TBombs, NewBoard, NewPlayers, NewBombsOfPlayer,RecurParamBombList).
+
 %- check explosion of the bomb
 checkBombExplosion( _, Board, ListPlayers, Bomb, BombsOfPlayer, NewBoard, NewPlayers, NewBombsOfPlayer, 0):-
 	nth0( 0, Bomb, Xb),
@@ -572,7 +681,7 @@ checkBombExplosion( _, Board, ListPlayers, Bomb, BombsOfPlayer, NewBoard, NewPla
 	bombExplode( Board, Xb, Yb, Eb, ListPlayers, NewPlayers, NewBoard),
 	delete(BombsOfPlayer, Bomb, NewBombsOfPlayer), !.
 
-checkBombExplosion( IndexBomb, _, _, Bomb, BombsOfPlayer, _, _, NewBombsOfPlayer, _):-
+checkBombExplosion( IndexBomb, NewBoard, NewListPlayers, Bomb, BombsOfPlayer, NewBoard, NewListPlayers, NewBombsOfPlayer, _):-
 	nth0( 2, Bomb, CountTimeBomb),
 	NewCountTimeBomb is CountTimeBomb-1, 
 	updateList( 2, NewCountTimeBomb, Bomb, NewBomb),
@@ -607,16 +716,21 @@ setModel( NewBoard, NewListOfPlayers, NewListOfBombs):-
 % Objective   :	Implant Bomb
 % Return      :	true -> Bomb implanted / false -> Bomb not implanted
 % Parameter 1 :	Index of player which implant the bomb
-implantBomb(PlayerIndex, Board, [X,Y,NbMaxBomb,PowerPlayer], ListAllBomb, NewListAllBomb):-
+implantBomb(PlayerIndex, Board, [X,Y,NbMaxBomb,PowerPlayer|T], ListAllBomb, NewListAllBomb):-
     	countTimeBomb(CountTimeBomb),
     	nth0(PlayerIndex, ListAllBomb, ListBombImplantByPlayer),
     	length(ListBombImplantByPlayer,Length),
-	plantBomb((Length<NbMaxBomb),ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer,ListAllBomb,NewListAllBomb), !.
+	Length < NbMaxBomb,
+	plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex, ListAllBomb,NewListAllBomb), !.
+implantBomb(PlayerIndex, Board, [X,Y,NbMaxBomb,PowerPlayer|T], ListAllBomb, NewListAllBomb):-
+    	countTimeBomb(CountTimeBomb),
+    	nth0(PlayerIndex, ListAllBomb, ListBombImplantByPlayer),
+    	plantBomb(0,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex,ListAllBomb,NewListAllBomb), !.
+
 %- planBomb
 plantBomb(0,_,_,_,_,_,_,ListAllBomb,ListAllBomb):- !.
 plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex, ListAllBomb, NewListAllBomb):- 
    	append(ListBombImplantByPlayer, [[X,Y,CountTimeBomb,PowerPlayer]], NewListBombImplantByPlayer),
-    	updateListofListWithOneParameter(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb),
 	updateList(PlayerIndex,NewListBombImplantByPlayer,ListAllBomb,NewListAllBomb), !.
 
 
