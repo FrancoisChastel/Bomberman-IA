@@ -30,7 +30,8 @@ server(Port) :-           % (2)
 http_server(http_dispatch, [port(Port)]).
 
 init(Request):-
-	http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
+	%http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
+	PlayersIAJSON='123',
 	retractall(board(_)),
         retractall(playersList(_)),
         createMap(Board),
@@ -126,12 +127,10 @@ movements(X,Yp,X,Yd) :- Yp is Yd+1; Yd is Yp+1.
 % Parameter 2 : Player
 % Parameter 3 : Direction
 % Parameter 4 : player with new coordinates after move
-applyMove(Player, Direction, NewPlayer):- 
-		nth0(0, Player, X),
-		nth0(1, Player, Y),
+applyMove([X,Y|T], Direction, NewPlayer):- 
 		move(Direction, X, Y, NewX, NewY),
-		updateList(0, NewX, Player, TInfoPlayer),
-		updateList(1, NewY, TInfoPlayer, NewPlayer).		
+		updateList(0, NewX, [X,Y|T], TInfoPlayer),
+		updateList(1, NewY, TInfoPlayer, NewPlayer), !.		
 
 % Function    :	ObtainBonus
 % Objective   :	Get if possible a bonus
@@ -354,12 +353,14 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 
 
 %%%%%%%%%%%%%%%% IA RANDOM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
-	 repeat,
-	 nth0(IndexPlayer,PlayerList,[X,Y,_,Power,Dead,Ia]),
-     Bomb = 0,
-	 random_between(-1,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
+	repeat,
+	nth0(IndexPlayer,PlayersList,[X,Y|T]),
+    	Bomb = 0,
+	random_between(0,4,TMove),
+	move(NextMove,X,Y,NewX,NewY),
+	accessible(Board,NewX,NewY), 
+	!.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -529,10 +530,9 @@ createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
 % Parameter 4 / Return : Number way available
 rapprochement(_,_,[],[]).
 rapprochement(XTarget,YTarget,[[XEnnemy,YEnnemy|_]|T],[ValRapprochement|TailRapprochement]):-
-rapprochement(XTarget,YTarget,T,TailRapprochement), moreCloser(XTarget,YTarget,XEnnemy,YEnnemy,ValRapprochement).
+	rapprochement(XTarget,YTarget,T,TailRapprochement), moreCloser(XTarget,YTarget,XEnnemy,YEnnemy,ValRapprochement).
 
 moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,[Distance]), Val is 1 - Distance/16.
-
 
 
 % Function 			   : dangerWeight
@@ -553,11 +553,11 @@ dangerWeight(_,_,_,1).
 % Parameter 3 		   : Board
 % Parameter 4 / Return : Number way available
 nbChoiceAvailable(X,Y,Board,Val):-
-X1 is X+1, availableWeight(X1,Y,Board,Value1),
-Y1 is Y-1, availableWeight(X,Y1,Board,Value2),
-X2 is X-1, availableWeight(X2,Y,Board,Value3),
-Y2 is Y+1, availableWeight(X,Y2,Board,Value4),
-Val is Value1 + Value2 + Value3 + Value4.
+	X1 is X+1, availableWeight(X1,Y,Board,Value1),
+	Y1 is Y-1, availableWeight(X,Y1,Board,Value2),
+	X2 is X-1, availableWeight(X2,Y,Board,Value3),
+	Y2 is Y+1, availableWeight(X,Y2,Board,Value4),
+	Val is Value1 + Value2 + Value3 + Value4.
 
 
 % Function 			   : availableWeight
@@ -570,12 +570,7 @@ availableWeight(X,Y,Board,1):- nth0(Y,Board,Line), nth0(X,Line,Point), not(block
 availableWeight(_,_,_,0).
 
 
-%totalBonus([],_,_).
-%totalBonus([[X,Y]|T],Board,Val):- bonus(X,Y,Board,RetourBonus), TotalBonus(T,Board,ValRetour), Val = ValRetour + RetourBonus.
-
-
-
-% Function 			   : bonusWeight
+% Function    :	bonusWeight
 % Aim      			   : to weight bonus
 % Parameter 1 		   : x-axis
 % Parameter 2 		   : y-axis
@@ -803,10 +798,9 @@ setModel( NewBoard, NewListOfPlayers, NewListOfBombs):-
 	assert( playersList(NewListOfPlayers)),
 	assert( bombsList(NewListOfBombs)).
 
-
 % Function    :	implantBomb
 % Objective   :	Implant Bomb
-% Return      :	true -> Bomb implanted / false -> Bomb not implanted
+% Roturn      :	true -> Bomb implanted / false -> Bomb not implanted
 % Parameter 1 :	Index of player which implant the bomb
 implantBomb(PlayerIndex, Board, [X,Y,NbMaxBomb,PowerPlayer|T], ListAllBomb, NewListAllBomb):-
     	countTimeBomb(CountTimeBomb),
@@ -830,13 +824,51 @@ plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex
 % Objective   : Instant T movement all players
 % Parameter 1 : Index of player
 % Parameter 2 : The list of player
-playersBeat(_, NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
-playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
-	nth0(5,Player,IA),
-    ia(0,IndexPlayer,[Player|T],Board,ListBombs,Bomb,Direction),
-	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
-	NewIndexPlayer is IndexPlayer+1,
-	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
+playersBeat(NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
+playersBeat(Board, Players, ListBombs, NewBoard, NewPlayers, NewListBombs):- 
+	playersAction(Board, Players, Bobms, ActionsPlayers),
+	applyPlayersAction(Board, Players, ListBombs, ActionsPlayers, NewBoard, NewPlayers, NewBombs), !.
+
+
+% Function    :	applyPlayersAction
+% Objective   :	
+applyPlayersAction(NewBoard, NewPlayers, NewBombs, [], NewBoard, NewPlayers, NewBombs):- !.
+applyPlayersAction(Board, Players, Bombs, [[IndexPlayer, Direction, IsBomb]|T], NewBoard, NewPlayers, NewBombs):-
+	nth0(IndexPlayer, Players, Player),
+	applyAction(IndexPlayer, Board, Player, Bombs, Direction, IsBomb, TPlayer, TBombs, TBoard),
+	updateList(IndexPlayer, TPlayer, Players, TPlayers),
+	applyPlayersAction(TBoard, TPlayers, TBombs, T, NewBoard, NewPlayers, NewBombs), !.
+applyPlayersAction(NewBoard, NewPlayers, NewBombs, [], NewBoard, NewPlayers, NewBombs):- !.
+
+% Function    :	playersAction
+% Objective   :	
+% Parameter 1 :	Board of the game
+% Parameter 2 :	Players 
+% Parameter 3 :	List of bombs
+% Parameter 4 :	Actions of players ([ [IndexPlayer, Direciton, Bomb]..])
+playersAction(Board, Players, Bombs, NewActions) :-
+	length(Players, Length),
+	NewLength is Length-1,
+	playersTAction(NewLength, Board, Players, Bombs, NewActions), !.
+%- players with index.
+playersTAction(-1, _, _, _, []):- !.
+playersTAction(IndexPlayer, Board, Players, Bombs, [Hn|Tn]):-
+	playerAction(Board, Players, Bombs, IndexPlayer, Hn),
+	NewIndexPlayer is IndexPlayer-1,
+	playersTAction(NewIndexPlayer, Board, Players, Bombs, Tn), !.
+playersTAction(-1, _, _, _, []):- !.
+
+
+% Function    :	playerAction
+% Objective   :	
+% Parameter 1 :	Board  of the game
+% Parameter 2 :	Players
+% Parameter 3 :	List of bombs
+% Parameter 4 :	Index of the player
+% Parameter 5 :	Actions of player [IndexPlayer, Direction , Bomb]
+playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
+	nth0(IndexPlayer, Players, [_, _, _, _, _, Ia]),
+	ia(Ia, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
 
 
 % Function    :	applyAction 
@@ -923,11 +955,11 @@ display([Head|Tail]):-writeln(''),displayLine(Head),display(Tail).
 
 createMap(X):- X =[
           ['x','x','x','x','x','x','x','x','x'],
-          ['x','_','_','_','_','_','_','_','x'],
+          ['x','_','_','o','o','o','_','_','x'],
           ['x','_','x','o','x','o','x','_','x'],
-          ['x','o','o','o','o','o','o','_','x'],
-          ['x','o','x','o','x','o','x','_','x'],
-          ['x','o','o','o','o','o','o','_','x'],
+          ['x','o','o','o','o','o','o','o','x'],
+          ['x','o','x','o','x','o','x','o','x'],
+          ['x','o','o','o','o','o','o','o','x'],
           ['x','_','x','o','x','o','x','_','x'],
           ['x','_','_','o','o','o','_','_','x'],
           ['x','x','x','x','x','x','x','x','x']
