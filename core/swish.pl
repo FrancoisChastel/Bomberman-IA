@@ -499,21 +499,21 @@ branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
 branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
 
     Index is It+1,
-    branch(Index,X,Y,Board,BombList,PlayerList,Value0),
-    Y0 is Y-1,branch(Index,X,Y0,Board,BombList,PlayerList,Value1),
-    X0 is X+1,branch(Index,X0,Y,Board,BombList,PlayerList,Value2),
-    Y1 is Y+1,branch(Index,X,Y1,Board,BombList,PlayerList,Value3),
-    X1 is X-1,branch(Index,X1,Y,Board,BombList,PlayerList,Value4),
+    branch(Index,X,Y,Board,PlayerList,BombList,Value0),
+    Y0 is Y-1,branch(Index,X,Y0,Board,PlayerList,BombList,Value1),
+    X0 is X+1,branch(Index,X0,Y,Board,PlayerList,BombList,Value2),
+    Y1 is Y+1,branch(Index,X,Y1,Board,PlayerList,BombList,Value3),
+    X1 is X-1,branch(Index,X1,Y,Board,PlayerList,BombList,Value4),
     correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue),
     ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
 
 
 createPonderatedList(X,Y,Board,BombList,PlayerList,List) :-
-    branch(0,X,Y,Board,BombList,PlayerList,Value1),
-    A is Y-1,branch(0,X,A,Board,BombList,PlayerList,Value2),
-    B is X+1,branch(0,B,Y,Board,BombList,PlayerList,Value3),
-    C is Y+1,branch(0,X,C,Board,BombList,PlayerList,Value4),
-    D is X-1,branch(0,D,Y,Board,BombList,PlayerList,Value5),
+    branch(0,X,Y,Board,PlayerList,BombList,Value1),
+    A is Y-1,branch(0,X,A,Board,PlayerList,BombList,Value2),
+    B is X+1,branch(0,B,Y,Board,PlayerList,BombList,Value3),
+    C is Y+1,branch(0,X,C,Board,PlayerList,BombList,Value4),
+    D is X-1,branch(0,D,Y,Board,PlayerList,BombList,Value5),
     List = [Value1,Value2,Value3,Value4,Value5].
 
 
