@@ -354,7 +354,6 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 
 %%%%%%%%%%%%%%%% IA RANDOM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
-<<<<<<< HEAD
 	repeat,
 	nth0(IndexPlayer,PlayersList,[X,Y|T]),
     	Bomb = 0,
@@ -362,12 +361,6 @@ ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 	move(NextMove,X,Y,NewX,NewY),
 	accessible(Board,NewX,NewY), 
 	!.
-=======
-	 repeat,
-	 nth0(IndexPlayer,PlayersList,[X,Y,_,Power,Dead,Ia]),
-     Bomb = 0,
-	 random_between(-1,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
->>>>>>> 25e7f52de10aca08dc3b1d00eb0030c873fffb76
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -893,15 +886,6 @@ playersTAction(-1, _, _, _, []):- !.
 playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
 	nth0(IndexPlayer, Players, [_, _, _, _, _, Ia]),
 	ia(Ia, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
-=======
-playersBeat(_, NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
-playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
-	nth0(5,Player,IA),
-    ia(1,IndexPlayer,[Player|T],Board,ListBombs,Bomb,Direction),
-	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
-	NewIndexPlayer is IndexPlayer+1,
-	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
->>>>>>> 25e7f52de10aca08dc3b1d00eb0030c873fffb76
 
 
 % Function    :	applyAction 
