@@ -109,6 +109,7 @@ move(2,X,Y,NewX,NewY):- NewX = X,NewY is Y+1.
 move(3,X,Y,NewX,NewY):- NewX is X-1,NewY = Y. 
 move(-1,X,Y,X,Y).
 
+
 % Function    : Movements
 % Objective   : Know if a movemnt is available for the player
 % Parameter 1 : x-axis Player
@@ -883,8 +884,13 @@ playersTAction(-1, _, _, _, []):- !.
 % Parameter 4 :	Index of the player
 % Parameter 5 :	Actions of player [IndexPlayer, Direction , Bomb]
 playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
-	nth0(IndexPlayer, Players, [_, _, _, _, _, Ia]),
+	nth0(IndexPlayer, Players, [_, _, _, _, 0, Ia]),
 	ia(Ia, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
+playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
+	nth0(IndexPlayer, Players, [_, _, _, _, 1, Ia]),
+	IsPlanting is 0, 
+	Direction is -1, !.
+
 
 
 % Function    :	applyAction 
