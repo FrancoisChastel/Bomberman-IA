@@ -90,13 +90,14 @@
                 success:function(data)
                 {
                     oldPlayers = players;
+                    board = data['board'];
                     players = data['players'];
                     bombs = data['bombs'];
                     var gameOver = false;
                     if(!gameOver)
                     {
                         displayInfoPlayers();
-                        transitionBoard();
+                        displayBoard();
                         setTimeout(motor,1000);
                     }
                     else 
@@ -146,12 +147,10 @@
                                 {
                                     contenu+='<img id="block" src="img/grass.png" style="position: relative; top: 0; left: 0;z-index:1;">';
                                 }
-                                contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 8px;z-index:2">';
-
                                 switch(occupants[n][2])
                                 {
                                     case 1:
-                                        contenu+='<img src="img/betty.png" class="betty" style="position: absolute; top: 8px; left: 8px;z-index:2">';
+                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 8px;z-index:2">';
                                         break;
                                     case 2:
                                         contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 2px;z-index:2">';
@@ -206,14 +205,18 @@
                     {
                         $('#betty'+i).each(function()
                         {
-                            $(this).css( "left" , $(this).css( "left" )+32);
+                            var a = parseInt($(this).css("left"))+32;
+                            var newV = a.toString()+'px';
+                            $(this).css( "left" , newV);
                         });
                     }
                     else 
                     {
                         $('#betty'+i).each(function()
                         {
-                            $(this).css( "left" , $(this).css( "left" )-32);
+                            var a = parseInt($(this).css("left"))-32;
+                            var newV = a.toString()+'px';
+                            $(this).css( "left" , newV);
                         });
                     }
                 }
@@ -223,14 +226,18 @@
                     {
                         $('#betty'+i).each(function()
                         {
-                            $(this).css( "top" , $(this).css( "top" )+32);
+                            var a = parseInt($(this).css("top"))+32;
+                            var newV = a.toString()+'px';
+                            $(this).css( "top" , newV);
                         });
                     }
                     else
                     {
                         $('#betty'+i).each(function()
                         {
-                            $(this).css( "top" , $(this).css( "top" )-32);
+                            var a = parseInt($(this).css("top"))-32;
+                            var newV = a.toString()+'px';
+                            $(this).css( "top" , newV);
                         });
                     }
                 }
@@ -326,6 +333,14 @@
                 
             }
             return false;
+        }
+        
+        function getValPx(chaine)
+        {
+            var value = 0;
+            for (var i = 0, len = chaine.length; i < len; i++) {
+                val
+            }
         }
 
     </script>

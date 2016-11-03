@@ -30,8 +30,7 @@ server(Port) :-           % (2)
 http_server(http_dispatch, [port(Port)]).
 
 init(Request):-
-	%http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
-	PlayersIAJSON='123',
+	http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
 	retractall(board(_)),
         retractall(playersList(_)),
         createMap(Board),
@@ -379,8 +378,8 @@ ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 %        - 2 : down
 %        - 3 : left
 ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
-    nth0(IndexPlayer,PlayerList,[X,Y,_,Power,_,_]),
-    checkNextTarget(IndexPlayer,PlayerList,[TargetX,TargetY]),
+    nth0(IndexPlayer,PlayersList,[X,Y,_,Power,_,_]),
+    checkNextTarget(IndexPlayer,PlayersList,[TargetX,TargetY]),
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
@@ -697,7 +696,7 @@ turn(_Request) :-
 	bombsManagement(Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs),
 	playersBeat(NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
 	setModel(TBoard, TListPlayers, TListBombs),
-      	reply_json(json([players=TListPlayers, bombs=TListBombs, board=TBoard])).
+	reply_json(json([board=NewBoard,players=NewListPlayers,bombs=NewListBombs])).
 
 
 %- Manage all the explosion
@@ -843,8 +842,8 @@ plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex
 
 playersBeat(NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
 playersBeat(Board, Players, ListBombs, NewBoard, NewPlayers, NewListBombs):- 
-	playersAction(Board, Players, Bobms, ActionsPlayers),
-	applyPlayersAction(Board, Players, ListBombs, ActionsPlayers, NewBoard, NewPlayers, NewBombs), !.
+	playersAction(Board, Players, ListBombs, ActionsPlayers),
+	applyPlayersAction(Board, Players, ListBombs, ActionsPlayers, NewBoard, NewPlayers, NewListBombs), !.
 
 
 % Function    :	applyPlayersAction
