@@ -832,11 +832,8 @@ plantBomb(1,ListBombImplantByPlayer,X,Y, CountTimeBomb, PowerPlayer, PlayerIndex
 % Parameter 2 : The list of player
 playersBeat(_, NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .                   
 playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
-	nth0(5, Player, IA),
-	%ia(IA, Player, Board, ListBombs, Bomb, Direction),
-	%iaAggresive(IndexPlayer,Bomb,Direction),
-    ia(2,IndexPlayer,[Player|T],Board,ListBombs,Direction),
-    writeln(NextMove),
+	nth0(5,Player,IA),
+    ia(0,IndexPlayer,[Player|T],Board,ListBombs,Bomb,Direction),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
 	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
