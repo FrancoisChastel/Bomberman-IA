@@ -135,7 +135,7 @@
                         var filled = false;
                         for(var n=0;n<occupants.length;n++)
                         {
-                            if(i==occupants[n][1] && j==occupants[n][0])
+                            if(i==occupants[n][1] && j==occupants[n][0] && players[occupants[n][3]][4]==0)
                             {
                                 filled = true;
                                 contenu+='<div style="position: relative; left: 0; top: 0;">';
@@ -313,13 +313,13 @@
                 {
                     if(players[i][0]==players[j][0] && players[i][1]==players[j][1])
                     {
-                        occupants[i]=[players[j][0],players[j][1],++numberOccupants,j];
+                        occupants[i]=[players[j][0],players[j][1],++numberOccupants,j,players[i][4]];
                         moreThanOne=true;
                     }
                 }
                 if(!moreThanOne)
                 {
-                    occupants[i]=[players[j][0],players[j][1],numberOccupants,j]
+                    occupants[i]=[players[j][0],players[j][1],numberOccupants,j,players[i][4]]
                 }
             }
             for(i=0;i<occupants.length;i++)
