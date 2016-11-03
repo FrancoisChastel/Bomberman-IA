@@ -372,8 +372,7 @@ iaAggresive(IndexPlayer,Bomb,NextMove):-
               % Target in line of Fire
               % For the next version implement better move after drop bomb
               Bomb = 1,
-              NextMove = 0,
-              writeln("Line Of Fire")
+              NextMove = -1
             );( 
               % No Ennemi in Line of Fire
               checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
@@ -404,22 +403,19 @@ checkNextTarget(Index,List,[X,Y]):- Search is Index + 1 , nth0(Search,List,[X,Y,
 actionSafe(1,Bomb,Move,NextMove):-
         % It's possible to escape 
             Bomb = 0,
-            NextMove = Move,
-            writeln("Try to escape").
+            NextMove = Move.
 
 actionSafe(0,Bomb,_,NextMove):-
       % IA is Dead --> Last Stand
             Bomb = 1,
-            NextMove = -1,
-            writeln("Dead").
+            NextMove = -1.
 %------------------------------------------------  
 
 %Called By IaAggresive  
 %------------------------------------------------  
 actionAnalyseAllSquare(0,_,_,_,_,_,_,Bomb,NextMove):-
         Bomb = 0,
-            NextMove = -1,
-            writeln("I prefer don't move").
+            NextMove = -1.
 
 actionAnalyseAllSquare(_,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove):-
         distanceManhattan(SquareList,TargetX,TargetY,ListManhattan),
@@ -435,12 +431,10 @@ actionAnalyseAllSquare(_,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove):-
 actionSquare('o',_,_,_,_,Bomb,NextMove):-
       Bomb = 1,
             %Find Safe Square next turn...
-            NextMove = 0,
-            writeln("I go mine a little").
+            NextMove = 0.
 actionSquare('_',X,Y,NextX,NextY,Bomb,NextMove):-
          Bomb = 0,
-             move(NextMove,X,Y,NextX,NextY),
-             writeln("Move").
+             move(NextMove,X,Y,NextX,NextY).
 %------------------------------------------------  
 
 %                  assert(bombsList([[[1,8,5,3]]])),
@@ -644,9 +638,9 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
 	playersBeat(0, Board, ListPlayers, ListBombs, TBoard, TListPlayers, TListBombs),
-	%managementBomb(0, TBoard, TListPlayers, TListBombs, NewBoard, NewListPlayers, NewListBombs),
-	setModel(TBoard, TListPlayers, TListBombs),
-      	reply_json(json([players=TListPlayers, bombs=TListBombs, board=TBoard])).
+	managementBomb(0, TBoard, TListPlayers, TListBombs, NewBoard, NewListPlayers, NewListBombs),
+	setModel(NewBoard, NewListPlayers, NewListBombs),
+      	reply_json(json([players=NewListPlayers, bombs=NewListBombs, board=NewBoard])).
 
 % Function    :	managementBomb
 % Objective   :	manage the bomb 
@@ -742,7 +736,7 @@ playersBeat(_, NewBoard, [], NewBombs, NewBoard, [], NewBombs):- ! .
 playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT], NewListBombs):-
 	nth0(5, Player, IA),
 	%ia(IA, Player, Board, ListBombs, Bomb, Direction),
-	ia_random(IndexPlayer,Bomb,Direction),
+	iaAggresive(IndexPlayer,Bomb,Direction),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
 	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).

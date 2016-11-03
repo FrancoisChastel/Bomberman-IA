@@ -35,7 +35,7 @@
         var players = [];
         var oldPlayers = [];
         var board = [];
-        var bombsDropped = 0;
+        var bombs = [];
         $('#numberPlayers').change(function()
         {
             var numberPlayers = $('#numberPlayers').val();
@@ -86,6 +86,7 @@
                 {
                     oldPlayers = players;
                     players = data['players'];
+                    bombs = data['bombs'];
                     var gameOver = false;
                     if(!gameOver)
                     {
@@ -131,7 +132,14 @@
                             {
                                 filled = true;
                                 contenu+='<div style="position: relative; left: 0; top: 0;">';
-                                contenu+='<img id="block" src="img/grass.png" style="position: relative; top: 0; left: 0;z-index:1;"/>';
+                                if(board[i][j] == "_" && isThereABomb(i,j))
+                                {
+                                    contenu+='<img id="bomb" src="img/grassBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                }
+                                else 
+                                {
+                                    contenu+='<img id="block" src="img/grass.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                }
                                 contenu+='<img src="img/betty.png" id="betty" style="position: absolute; top: 8px; left: 8px;z-index:2">';
 
                                 switch(occupants[n][2])
@@ -161,7 +169,14 @@
                         }
                         if(!filled)
                         {
-                            contenu+='<img id="block" src="img/grass.png">';
+                            if(board[i][j] == "_" && isThereABomb(i,j))
+                            {
+                                contenu+='<img id="bomb" src="img/grassBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                            }
+                            else 
+                            {
+                                contenu+='<img id="block" src="img/grass.png">';
+                            }
                         }
                     }
 
@@ -207,6 +222,22 @@
                 }
             }
             return occupants;
+        }
+        
+        function isThereABomb(x,y)
+        {
+            for(var i=0;i<bombs.length;i++)
+            {
+                for(var j=0;j<bombs[i].length;j++)
+                {
+                    if(x==bombs[i][j][0] && y==bombs[i][j][0])
+                    {
+                        return true;
+                    }
+                }
+                
+            }
+            return false;
         }
 
     </script>
