@@ -549,6 +549,8 @@ dangerWeight(_,_,_,0).
 % Parameter 3 		   : Board
 % Parameter 4 / Return : Number way available
 nbChoiceAvailable(X,Y,Board,Val):-
+writeln(X),
+writeln(Y),
 X1 is X+1, availableWeight(X1,Y,Board,Value1),
 Y1 is Y-1, availableWeight(X,Y1,Board,Value2),
 X2 is X-1, availableWeight(X2,Y,Board,Value3),
@@ -762,7 +764,7 @@ playersBeat(IndexPlayer, Board, [Player|T], ListBombs, NewBoard, [NewPlayer|NewT
 	nth0(5, Player, IA),
 	%ia(IA, Player, Board, ListBombs, Bomb, Direction),
 	%iaAggresive(IndexPlayer,Bomb,Direction),
-    ia(2,IndexPlayer,ListPlayer,Board,BombList,NextMove),
+    ia(2,IndexPlayer,ListPlayer,Board,ListBombs,NextMove),
 	applyAction(IndexPlayer, Board, Player, ListBombs, Direction, Bomb, NewPlayer, TListBombs, TBoard),
 	NewIndexPlayer is IndexPlayer+1,
 	playersBeat(NewIndexPlayer, TBoard, T, TListBombs, NewBoard, NewT, NewListBombs).
