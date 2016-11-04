@@ -414,7 +414,7 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
           % Danger : Move to safe place
           backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
           move(Move,X,Y,NX,NY),
-	  isBomb(NX,NY,BombList),
+	  isBomb(NX,NY,BombList,0),
           actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove)
       );(
             % No Danger
@@ -561,13 +561,14 @@ ia(2,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     max_list(PonderatedList,Max),
     %writeln(PonderatedList),
     nth0(Choice,PonderatedList,Max),
-   ( (nbChoiceAvailable(X,Y,Board,Escape), Escape >= 1)->
+    NextMove is Choice-1,
+   ( (nbChoiceAvailable(X,Y,Board,Escape), Escape >= 1, NextMove \= -1)->
 
         ( Bomb = DropBomb
             )
         ;( Bomb is 0)
     ),
-    NextMove is Choice-1,
+
     %writeln(Bomb),
     %writeln(NextMove),
     !.
@@ -598,10 +599,10 @@ createPonderatedList(X,Y,Board,BombList,PlayerList,Bomb,List) :-
     B is X+1,branch(1,B,Y,Board,PlayerList,BombList,Value3),
     C is Y+1,branch(1,X,C,Board,PlayerList,BombList,Value4),
     D is X-1,branch(1,D,Y,Board,PlayerList,BombList,Value5),
-    bombWorthIt(X,A,Board,DropIt1),
-    bombWorthIt(B,Y,Board,DropIt2),
-    bombWorthIt(X,C,Board,DropIt3),
-    bombWorthIt(D,Y,Board,DropIt4),
+    bombWorthIt(X,A,Board,PlayerList,DropIt1),
+    bombWorthIt(B,Y,Board,PlayerList,DropIt2),
+    bombWorthIt(X,C,Board,PlayerList,DropIt3),
+    bombWorthIt(D,Y,Board,PlayerList,DropIt4),
     isDirectWall(X,A,Board,Value6),
     isDirectWall(B,Y,Board,Value7),
     isDirectWall(X,C,Board,Value8),
@@ -617,11 +618,12 @@ createPonderatedList(X,Y,Board,BombList,PlayerList,Bomb,List) :-
 %Aim                   : Should the IA drop bomb or not
 
 
-bombWorthIt(X,Y,Board,1) :-
+bombWorthIt(X,Y,Board,[XP,YP|_],1) :-
     dropBomb(X,Y,Board,Bomb),
     Bomb is 1,
-    nth0(Y, Board, Line),nth0(X, Line, Square), destructibleBlock(Square).
-bombWorthIt(_,_,_,0).
+    nth0(Y, Board, Line),nth0(X, Line, Square),
+    destructibleBlock(Square).
+bombWorthIt(_,_,_,_,0).
 
 
 
@@ -694,7 +696,7 @@ bonusWeight(_,_,_,0).
 % Parameter 2           : Y
 % Parameter 3           : Board
 
-isWall(X,Y,Board,-1.5):- nth0(Y,Board,Line),nth0(X,Line,Square),block(Square).
+isWall(X,Y,Board,-2):- nth0(Y,Board,Line),nth0(X,Line,Square),block(Square).
 isWall(_,_,_,0).
 
 isDestructible(X,Y,Board,1):-nth0(Y,Board,Line),nth0(X,Line,Square),destructibleBlock(Square).
@@ -713,7 +715,7 @@ rapprochement(X,Y,PlayerList,List),
 sum_list(List,Value3),
 isDestructible(X,Y,Board,Value5),
 %WheightValue is Value0 + Value1 + Value2 + Value3 + Value4 + Value5.
-WheightValue is Value0 + Value4 + Value5 + Value1 + Value2 + Value3.
+WheightValue is Value3 + Value2 + Value4.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
