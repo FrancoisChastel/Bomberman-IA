@@ -416,29 +416,10 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 
 p_danger(Fonction,Board,BombList,X,Y,_,_,_,Bomb,NextMove):-Fonction,	
           % Danger : Move to safe place
-          backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
+          initFunctionSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
           move(Move,X,Y,NX,NY),
 	  isBomb(NX,NY,BombList,0),
-
-          actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove)
-      );(
-            % No Danger
-            lineOfFire(X,Y,TargetX,TargetY,Power) ->
-            (   
-              % Target in line of Fire
-              % For the next version implement better move after drop bomb
-              dropBomb(X,Y,Board,Bomb),
-              NextMove = -1
-            );( 
-              % No Ennemi in Line of Fire
-              % Check Close Object
-              checkCloseObject(Board,BombList,X,Y,Find,Move),
-              closeObjectDetected(Find,Board,X,Y,TargetX,TargetY,Bomb,Move,NextMove)
-              
-            )
-        )
-    ),
-  !.
+          actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove). 
 
 p_danger(_,Board,BombList,X,Y,TargetX,TargetY,Power,Bomb,NextMove):-
 	    %No Danger
@@ -1095,7 +1076,7 @@ backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
    ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
    ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 ); Safe = 0, Move = -1
      )
-     ;   Safe = 0,Move = -1.
+     ;   Safe = 0,Move = -1,!.
  
  initFunctionSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
      %DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 > 0,
@@ -1109,7 +1090,7 @@ backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
    ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
    ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 ); Safe = 0, Move = -1
      )
-     ;   Safe = 0,Move = -1.
+     ;   Safe = 0,Move = -1,!.
 
 
 % Function    : displayBoard
