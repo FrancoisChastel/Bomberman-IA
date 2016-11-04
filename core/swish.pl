@@ -551,26 +551,28 @@ ia(2,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     nth0(IndexPlayer,PlayersList,[X,Y,_,_,_,_]),
     createPonderatedList(X,Y,Board,BombList,PlayersList,DropBomb,PonderatedList),
     max_list(PonderatedList,Max),
-    %writeln(PonderatedList),
+    writeln(PonderatedList),
     nth0(Choice,PonderatedList,Max),
     Bomb = DropBomb,
-    ( (Bomb is 1 )->
-
-        ( backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
-          NextMove is Move
-            )
-        ;( NextMove is Choice )
-    ),
+    NextMove is Choice,
     !.
+%    ( (Bomb is 1 )->
+%
+%        ( backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
+%          NextMove is Move
+%            )
+%        ;( NextMove is Choice )
+%    ),
+%    !.
 
 
 
 %----------------
 %Function used by IA
 
-branch(3,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
+branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
     correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,Value),
-    ValueGlobal is Value.
+    ValueGlobal is Value/4.
 
 branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
     Index is It+1,
@@ -580,15 +582,15 @@ branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
     Y1 is Y+1,branch(Index,X,Y1,Board,PlayerList,BombList,Value3),
     X1 is X-1,branch(Index,X1,Y,Board,PlayerList,BombList,Value4),
     correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue),
-    ValueGlobal is Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue.
+    ValueGlobal is (Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue)/It.
 
 
 createPonderatedList(X,Y,Board,BombList,PlayerList,Bomb,List) :-
-    branch(0,X,Y,Board,PlayerList,BombList,Value1),
-    A is Y-1,branch(0,X,A,Board,PlayerList,BombList,Value2),
-    B is X+1,branch(0,B,Y,Board,PlayerList,BombList,Value3),
-    C is Y+1,branch(0,X,C,Board,PlayerList,BombList,Value4),
-    D is X-1,branch(0,D,Y,Board,PlayerList,BombList,Value5),
+    branch(1,X,Y,Board,PlayerList,BombList,Value1),
+    A is Y-1,branch(1,X,A,Board,PlayerList,BombList,Value2),
+    B is X+1,branch(1,B,Y,Board,PlayerList,BombList,Value3),
+    C is Y+1,branch(1,X,C,Board,PlayerList,BombList,Value4),
+    D is X-1,branch(1,D,Y,Board,PlayerList,BombList,Value5),
     bombWorthIt(X,A,Board,DropIt1),
     bombWorthIt(B,Y,Board,DropIt2),
     bombWorthIt(X,C,Board,DropIt3),
@@ -642,7 +644,7 @@ moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,
 % Parameter 3 		   : List of bombs
 % Parameter 4 / Return : Value of weight
 
-dangerWeight(X,Y,ListBomb,-100):- danger(X,Y,ListBomb).
+dangerWeight(X,Y,ListBomb,-10):- danger(X,Y,ListBomb).
 dangerWeight(_,_,_,0).
 
 
@@ -691,7 +693,7 @@ isWall(_,_,_,1).
 isDestructible(X,Y,Board,1):-nth0(Y,Board,Line),nth0(X,Line,Square),destructibleBlock(Square).
 isDestructible(_,_,_,0).
 
-isDirectWall(X,Y,Board,-100000):- nth0(Y,Board,Line),nth0(X,Line,Square),block(Square).
+isDirectWall(X,Y,Board,-1000):- nth0(Y,Board,Line),nth0(X,Line,Square),block(Square).
 isDirectWall(_,_,_,0).
 
 
