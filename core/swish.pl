@@ -555,11 +555,18 @@ checkCloseObject(_,_,_,_,0,0).
 
 ia(2,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     nth0(IndexPlayer,PlayersList,[X,Y,_,_,_,_]),
-    createPonderatedList(X,Y,Board,BombList,PlayersList,PonderatedList),
+    createPonderatedList(X,Y,Board,BombList,PlayersList,DropBomb,PonderatedList),
     max_list(PonderatedList,Max),
+    %writeln(PonderatedList),
     nth0(Choice,PonderatedList,Max),
-    NextMove is Choice-1,
-    Bomb = 0,
+    Bomb = DropBomb,
+    ( (Bomb is 1 )->
+
+        ( backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
+          NextMove is Move
+            )
+        ;( NextMove is Choice )
+    ),
     !.
 
 
@@ -567,7 +574,7 @@ ia(2,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 %----------------
 %Function used by IA
 
-branch(4,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
+branch(3,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
     correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,Value),
     ValueGlobal is Value.
 
@@ -588,16 +595,29 @@ createPonderatedList(X,Y,Board,BombList,PlayerList,Bomb,List) :-
     B is X+1,branch(0,B,Y,Board,PlayerList,BombList,Value3),
     C is Y+1,branch(0,X,C,Board,PlayerList,BombList,Value4),
     D is X-1,branch(0,D,Y,Board,PlayerList,BombList,Value5),
-    ((bombWorthIt([[X,A],[B,Y],[X,C],[D,Y]],Board,DropIt), DropIt = 1) ;(dropBomb(X,Y,Board,Bomb),Bomb = 1)),
-    List = [Value1,Value2,Value3,Value4,Value5],
-    Bomb = DropIt.
-
+    bombWorthIt(X,A,Board,DropIt1),
+    bombWorthIt(B,Y,Board,DropIt2),
+    bombWorthIt(X,C,Board,DropIt3),
+    bombWorthIt(D,Y,Board,DropIt4),
+    isDirectWall(X,A,Board,Value6),
+    isDirectWall(B,Y,Board,Value7),
+    isDirectWall(X,C,Board,Value8),
+    isDirectWall(D,Y,Board,Value9),
+    Value10 is Value2 + Value6,
+    Value11 is Value3 + Value7,
+    Value12 is Value4 + Value8,
+    Value13 is Value5 + Value9,
+    List = [Value1,Value10,Value11,Value12,Value13],
+    Bomb is DropIt1 + DropIt2 + DropIt3 + DropIt4.
 
 %Function              : bombWorthIt
 %Aim                   : Should the IA drop bomb or not
 
-bombWorthIt([[X,Y]|T],Board,1) :-
-   nth0(Y, Board, Line),nth0(X, Line, Square), destructibleBlock(Square).
+
+bombWorthIt(X,Y,Board,1) :-
+    dropBomb(X,Y,Board,Bomb),
+    Bomb is 1,
+    nth0(Y, Board, Line),nth0(X, Line, Square), destructibleBlock(Square).
 bombWorthIt(_,_,_,0).
 
 
@@ -628,8 +648,8 @@ moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,
 % Parameter 3 		   : List of bombs
 % Parameter 4 / Return : Value of weight
 
-dangerWeight(X,Y,ListBomb,0):- danger(X,Y,ListBomb).
-dangerWeight(_,_,_,1).
+dangerWeight(X,Y,ListBomb,-100):- danger(X,Y,ListBomb).
+dangerWeight(_,_,_,0).
 
 
 % Function 			   : nbChoiceAvailable
@@ -671,8 +691,15 @@ bonusWeight(_,_,_,0).
 % Parameter 2           : Y
 % Parameter 3           : Board
 
-isWall(X,Y,Board,-10):- nth0(Y,Board,Line),nth0(X,Line,Square),wall(Square).
-isWall(_,_,_,0).
+isWall(X,Y,Board,0):- nth0(Y,Board,Line),nth0(X,Line,Square),wall(Square).
+isWall(_,_,_,1).
+
+isDestructible(X,Y,Board,1):-nth0(Y,Board,Line),nth0(X,Line,Square),destructibleBlock(Square).
+isDestructible(_,_,_,0).
+
+isDirectWall(X,Y,Board,-100000):- nth0(Y,Board,Line),nth0(X,Line,Square),block(Square).
+isDirectWall(_,_,_,0).
+
 
 correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue):-
 bonusWeight(X,Y,Board,Value0),
@@ -681,8 +708,8 @@ dangerWeight(X,Y,Board,Value2),
 isWall(X,Y,Board,Value4),
 rapprochement(X,Y,PlayerList,List),
 sum_list(List,Value3),
-WheightValue is Value0 + Value1 + Value2 + Value3 + Value4.
-
+isDestructible(X,Y,Board,Value5),
+WheightValue is Value0 + Value1 + Value2 + Value3 + Value4 + Value5*2.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
