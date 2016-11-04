@@ -174,7 +174,13 @@ obtainBonus( Board, Player, NewBoard, NewPlayer):-
 	updateList(3, NewPuissance, Player, NewPlayer), !.
 obtainBonus( NewBoard, NewPlayer, NewBoard, NewPlayer):- !.
 
+isBomb2(_,_,[],0).
+isBomb2(X,Y,[[X,Y,_,_]|T],R):- isBomb2(X,Y,T,R2), R=1,!.
+isBomb2(X,Y,[[X2,Y2,_,_]|T],R):- isBomb2(X,Y,T,R2), R=R2,!.
 
+isBomb(X,Y,[],0).
+isBomb(X,Y,[H|T],1):- isBomb2(X,Y,H,1),!.
+isBomb(X,Y,[H|T],R):- isBomb2(X,Y,H,0), isBomb(X,Y,T,R),!.
 		
 % Function    : Accessible
 % Objective   : Know if a point is accessible for a player
@@ -1021,7 +1027,7 @@ backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
 
  functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
      DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 >= 0,
-     (   accessible(Board,X,Y), not(nth0(Index,N,[X,Y])))->
+     (   accessible(Board,X,Y), isBomb(X,Y,ListBomb,0), not(nth0(Index,N,[X,Y])))->
      append(N,[[X,Y]],N2),
      (  
    ( not(danger(X,Y,ListBomb)) , Safe = 1) ;
