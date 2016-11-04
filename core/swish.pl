@@ -654,7 +654,7 @@ moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,
 % Parameter 3 		   : List of bombs
 % Parameter 4 / Return : Value of weight
 
-dangerWeight(X,Y,ListBomb,-10):- danger(X,Y,ListBomb).
+dangerWeight(X,Y,ListBomb,-9):- danger(X,Y,ListBomb).
 dangerWeight(_,_,_,0).
 
 
