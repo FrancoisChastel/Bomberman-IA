@@ -414,7 +414,7 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 
 p_danger(Fonction,Board,BombList,X,Y,_,_,_,Bomb,NextMove):-Fonction,	
           % Danger : Move to safe place
-          initFunctionSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
+          initFunctionSafePlace(X,Y,Board,BombList,[],3,Safe,Move),
           move(Move,X,Y,NX,NY),
 	  isBomb(NX,NY,BombList,0),
           actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove). 
