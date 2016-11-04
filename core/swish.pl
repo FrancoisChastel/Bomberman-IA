@@ -33,6 +33,7 @@ init(Request):-
 	http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
 	retractall(board(_)),
         retractall(playersList(_)),
+	retractall(bombsList(_)),
         createMap(Board),
     	assert(board(Board)),
     	assert(playersList([[1, 1, 1, 2, 0, -1], [1, 7, 1, 2, 0, -1], [7, 1, 1, 2, 0, -1], [7, 7, 1, 2, 0, -1]])),
@@ -109,6 +110,7 @@ move(2,X,Y,NewX,NewY):- NewX = X,NewY is Y+1.
 move(3,X,Y,NewX,NewY):- NewX is X-1,NewY = Y. 
 move(-1,X,Y,X,Y).
 
+
 % Function    : Movements
 % Objective   : Know if a movemnt is available for the player
 % Parameter 1 : x-axis Player
@@ -131,6 +133,18 @@ applyMove([X,Y|T], Direction, NewPlayer):-
 		updateList(0, NewX, [X,Y|T], TInfoPlayer),
 		updateList(1, NewY, TInfoPlayer, NewPlayer), !.		
 
+% Function    :	evaluateBonus
+% Objective   :	give to the players and update the board
+% Parameter 1 :	Board
+% Parameter 2 :	List of players
+% Parameter 3 :	New Board
+% Parameter 4 :	New players
+evaluateBonus(NewBoard, [], NewBoard, []):- !.
+evaluateBonus(Board, [Hp|Tp], NewBoard, [Hn|Tn]):-
+	evaluateBonus(Board, Tp, TBoard, Tn),
+	obtainBonus( TBoard, Hp, NewBoard, Hn), !.
+evaluateBonus(NewBoard, [], NewBoard, []):- !.
+
 % Function    :	ObtainBonus
 % Objective   :	Get if possible a bonus
 % Parameter 1 :	Board
@@ -145,7 +159,9 @@ obtainBonus( Board, Player, NewBoard, NewPlayer):-
 	capacite(TElem),
 	nth0(2, Player, Capacite),
 	NewCapacite is Capacite+1,
-	updateList(2, Player, NewCapacite).
+	path(Path),
+	updateBoard(Board, X, Y, Path, NewBoard),
+	updateList(2,NewCapacite, Player, NewPlayer), !.
 obtainBonus( Board, Player, NewBoard, NewPlayer):-
 	nth0(0, Player, X),
 	nth0(1, Player, Y),
@@ -153,9 +169,11 @@ obtainBonus( Board, Player, NewBoard, NewPlayer):-
 	nth0(X, TLine, TElem),
 	puissance(TElem),
 	nth0(3, Player, Puissance),
+	path(Path),
+	updateBoard(Board, X, Y, Path, NewBoard),
 	NewPuissance is Puissance+1,
-	updateList(3, Player, NewPuissance).
-obtainBonus( NewBoard, NewPlayer, NewBoard, NewPlayer).
+	updateList(3, NewPuissance, Player, NewPlayer), !.
+obtainBonus( NewBoard, NewPlayer, NewBoard, NewPlayer):- !.
 
 
 		
@@ -355,12 +373,14 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 	repeat,
 	nth0(IndexPlayer,PlayersList,[X,Y|T]),
-    	Bomb = 0,
-	random_between(0,4,TMove),
+	randomTen(Bomb),
+	random(-1,4,TMove),
 	move(NextMove,X,Y,NewX,NewY),
-	accessible(Board,NewX,NewY), 
+	accessible(Board,NewX,NewY),
 	!.
 
+randomTen(Bomb):-random(0,10,A), A = 0, Bomb = 1.
+randomTen(0).  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -380,6 +400,7 @@ ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     nth0(IndexPlayer,PlayersList,[X,Y,_,Power,_,_]),
     checkNextTarget(IndexPlayer,PlayersList,[TargetX,TargetY]),
+
   % ------------------------------------
   
     (danger(X,Y,BombList) ->
@@ -397,9 +418,10 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
               NextMove = -1
             );( 
               % No Ennemi in Line of Fire
-              checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
-              length(SquareList,LengthSquareList),
-              actionAnalyseAllSquare(LengthSquareList,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove)
+              % Check Close Object
+              checkCloseObject(Board,BombList,X,Y,Find,Move),
+              closeObjectDetected(Find,Board,X,Y,TargetX,TargetY,Bomb,Move,NextMove)
+              
             )
         )
     ),
@@ -438,6 +460,18 @@ actionSafe(Board,X,Y,0,Bomb,_,NextMove):-
 
 %Called By IaAggresive  
 %------------------------------------------------  
+closeObjectDetected(1,_,_,_,_,_,_,Move,NextMove):-
+            NextMove = Move.
+
+closeObjectDetected(_,Board,X,Y,TargetX,TargetY,Bomb,_,NextMove):-
+    checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),
+        length(SquareList,LengthSquareList),
+        actionAnalyseAllSquare(LengthSquareList,Board,X,Y,TargetX,TargetY,SquareList,Bomb,NextMove).
+    
+%------------------------------------------------  
+
+%Called By CloseObjectDetected  
+%------------------------------------------------  
 actionAnalyseAllSquare(0,_,_,_,_,_,_,Bomb,NextMove):-
             Bomb = 0,
             NextMove = -1.
@@ -462,7 +496,10 @@ actionSquare(_,'_',X,Y,NextX,NextY,Bomb,NextMove):-
       % IA can move without drop a bomb
       Bomb = 0,
       move(NextMove,X,Y,NextX,NextY).
-%------------------------------------------------  
+%------------------------------------------------ 
+
+
+
 
 dropBomb(X,Y,Board,Bomb):- nth0(Y,Board,Line),nth0(X,Line,Square),not(bomb(Square)),Bomb=1.
 dropBomb(_,_,_,0).
@@ -476,8 +513,36 @@ dropBomb(_,_,_,0).
 %                  iaAggresive(IndexPlayer,IndexTarget,Bomb,Move).
 
 
+p_move(X,Y,NewX,NewY):- NewX = X,NewY is Y-1.    
+p_move(X,Y,NewX,NewY):- NewX is X+1,NewY = Y. 
+p_move(X,Y,NewX,NewY):- NewX = X,NewY is Y+1. 
+p_move(X,Y,NewX,NewY):- NewX is X-1,NewY = Y. 
+
+p_BonusSquare(Board,X,Y):- nth0(Y,Board,Line),nth0(X,Line,Square),bonus(Square).
+
+checkCloseObject(Board,BombList,X,Y,Find,NextMove):- 
+    p_move(X,Y,NX,NY),
+    accessible(Board,NX,NY),
+    not(danger(NX,NY,BombList)),
+    p_BonusSquare(Board,NX,NY),
+    move(NextMove,X,Y,NX,NY),
+    Find = 1.
+checkCloseObject(Board,BombList,X,Y,Find,NextMove):- 
+    p_move(X,Y,NX,NY),
+    accessible(Board,NX,NY),
+    not(danger(X,Y,BombList)),
+    p_move(NX,NY,TempX,TempY),
+    accessible(Board,TempX,TempY),
+
+    not(danger(TempX,TempY,BombList)),
+    p_BonusSquare(Board,TempX,TempY),
+    move(NextMove,X,Y,NX,NY),
+    Find = 1.
+checkCloseObject(_,_,_,_,0,0).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%%%%%%%%%%%%% IA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -720,9 +785,10 @@ killPlayer(Player, DeadPlayer):- updateList(4, 1, Player, DeadPlayer).
 %- A game turn
 turn(_Request) :-
 	getModel(Board, ListPlayers, ListBombs),
-	bombsManagement(Board, ListPlayers, ListBombs, NewBoard, NewListPlayers, NewListBombs),
-	playersBeat(NewBoard, NewListPlayers, NewListBombs, TBoard, TListPlayers, TListBombs),
-	setModel(TBoard, TListPlayers, TListBombs),
+	bombsManagement(Board, ListPlayers, ListBombs, TBoard, TListPlayers, TListBombs),
+	playersBeat(TBoard, TListPlayers, TListBombs, TTBoard, TTListPlayers, NewListBombs),
+	evaluateBonus(TTBoard, TTListPlayers, NewBoard, NewListPlayers), 
+	setModel(NewBoard, NewListPlayers, NewListBombs),
 	reply_json(json([board=NewBoard,players=NewListPlayers,bombs=NewListBombs])).
 
 
@@ -910,8 +976,13 @@ playersTAction(-1, _, _, _, []):- !.
 % Parameter 4 :	Index of the player
 % Parameter 5 :	Actions of player [IndexPlayer, Direction , Bomb]
 playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
-	nth0(IndexPlayer, Players, [_, _, _, _, _, Ia]),
-	ia(2, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
+	nth0(IndexPlayer, Players, [_, _, _, _, 0, Ia]),
+	ia(Ia, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
+playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
+	nth0(IndexPlayer, Players, [_, _, _, _, 1, Ia]),
+	IsPlanting is 0, 
+	Direction is -1, !.
+
 
 
 % Function    :	applyAction 

@@ -17,7 +17,7 @@ class StatistiquesController extends Controller
     public function gameOver(Request $request)
     {
         $players = $request->request->get('players');
-        $bombs = $request->request->get('bombs');
+        $winners = $request->request->get('winners');
         $statistique = new Statistique();
         switch(count($players))
         {
@@ -37,13 +37,16 @@ class StatistiquesController extends Controller
                 $statistique->setJ4($this->getNameIA($players[3][5]));
                 break;
         }
-        foreach ($players as $key=>$player)
+        $wins = '';
+        if(count($winners)>1)
         {
-            if($player[4]==0)
-            {
-                $statistique->setWinner('J'.($key+1));
-            }
+            $wins = 'Egalité';
         }
+        else
+        {
+            $wins = 'J'.($winners[0]+1);
+        }
+        $statistique->setWinner($wins);
         $em = $this->getDoctrine()->getManager();
         $em->persist($statistique);
         $em->flush();

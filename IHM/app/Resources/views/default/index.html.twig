@@ -16,7 +16,7 @@
     <form>
     <div id="settings" class="row" style="margin-left:auto;margin-right: auto;margin-top: 40px;width:40%">
         <div class="form-group" style="margin: auto;width:200px">
-            <label>Server address<input class="form-control" style="width:auto" type="textaera" id="servAddress"></label><br>
+            <label>Server address<input class="form-control" style="width:auto" type="textaera" id="servAddress" value="http://localhost:8080/"></label><br>
         </div>
         <div class="form-group" style="margin: auto;width:200px">
             <label>Nombre de joueurs<input class="form-control" style="width:auto" type="number" id="numberPlayers"></label><br>
@@ -37,6 +37,7 @@
     <script>
         var players = [];
         var oldOccupants = [];
+        var oldPlayers = [];
         var board = [];
         var bombs = [];
         var server;
@@ -46,7 +47,7 @@
             var contenu = '<div class="form-group">';
             for(var i=0;i<numberPlayers;i++)
             {
-                contenu+='<label>IA Joueur '+(i+1)+'<select class="playersIA"><option value="0">Random</option><option value="1">Aggressive</option></select></label><br>'
+                contenu+='<label>IA Joueur '+(i+1)+'<select class="playersIA"><option value="1">Aggressive</option><option value="0">Random</option></select></label><br>'
             }
             contenu+='</div>';
             $('#players').html(contenu);
@@ -71,12 +72,12 @@
                 success:function(data)
                 {
                     $('#settings').remove();
-                    oldOccupants = data['players'];
+                    oldPlayers = data['players'];
                     players = data['players'];
                     board = data['board'];
                     displayInfoPlayers();
                     displayBoard();
-                    setTimeout(motor,2000);
+                    setTimeout(motor,400);
                 }
             })
         }
@@ -93,19 +94,21 @@
                     board = data['board'];
                     players = data['players'];
                     bombs = data['bombs'];
-                    var gameOver = false;
-                    if(!gameOver)
+                    var gameOver = isGameOver();
+                    if(gameOver.length==0)
                     {
                         displayInfoPlayers();
-                        displayBoard();
-                        setTimeout(motor,1000);
+                        transitionBoard();
+                        setTimeout(motor,500);
                     }
                     else 
                     {
+                        displayInfoPlayers();
+                        transitionBoard();
                         $.ajax({
                             url:'{{ path('game_over') }}',
                             type:'POST',
-                            data:{players : players,bombs:bombsDropped}
+                            data:{winners : gameOver,players:players}
                         })
                     }
                 }
@@ -135,13 +138,21 @@
                         var filled = false;
                         for(var n=0;n<occupants.length;n++)
                         {
-                            if(i==occupants[n][1] && j==occupants[n][0])
+                            if(i==occupants[n][1] && j==occupants[n][0] && players[occupants[n][3]][4]==0)
                             {
                                 filled = true;
                                 contenu+='<div style="position: relative; left: 0; top: 0;">';
                                 if(board[i][j] == "_" && isThereABomb(i,j))
                                 {
                                     contenu+='<img id="bomb" src="img/grassBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                }
+                                else if(board[i][j] == "p")
+                                {
+                                    contenu+='<img id="bombBonus" src="img/bonusBiggerBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                }
+                                else if(board[i][j] == "c")
+                                {
+                                    contenu+='<img id="bombBonus" src="img/bonusBombs.png" style="position: relative; top: 0; left: 0;z-index:1;">';
                                 }
                                 else 
                                 {
@@ -178,6 +189,14 @@
                             {
                                 contenu+='<img id="bomb" src="img/grassBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
                             }
+                            else if(board[i][j] == "p")
+                            {
+                                contenu+='<img id="bombBonus" src="img/bonusBiggerBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                            }
+                            else if(board[i][j] == "c")
+                            {
+                                contenu+='<img id="bombBonus" src="img/bonusBombs.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                            }
                             else 
                             {
                                 contenu+='<img id="block" src="img/grass.png">';
@@ -197,8 +216,8 @@
         {
             for(var i=0;i<players.length;i++)
             {
-                var diffX = players[i][1]-oldPlayers[i][1];
-                var diffY = players[i][0]-oldPlayers[i][0];
+                var diffX = players[i][0]-oldPlayers[i][0];
+                var diffY = players[i][1]-oldPlayers[i][1];
                 if(diffX!=0)
                 {
                     if(diffX>0)
@@ -220,7 +239,7 @@
                         });
                     }
                 }
-                else 
+                else if(diffY!=0)
                 {
                     if(diffY>0)
                     {
@@ -242,20 +261,21 @@
                     }
                 }
             }
-            setTimeout(displayBoard,1000);
+            setTimeout(displayBoard,250);
         }
         
         function displayInfoPlayers()
         {
             var contenu = '<h2>Information des joueurs</h2>';
             contenu += '<table style="width:90%;margin: auto" class="table table-hover">';
-            contenu+='<thead><tr><th>Joueur</th><th>X</th><th>Y</th><th>Puissance</th><th>En vie</th><th>IA</th></tr></thead><tbody>';
+            contenu+='<thead><tr><th>Joueur</th><th>X</th><th>Y</th><th>Bombes Max</th><th>Puissance</th><th>En vie</th><th>IA</th></tr></thead><tbody>';
             for(var i=0;i<players.length;i++)
             {
                 contenu+='<tr>';
                 contenu+='<td>Joueur '+(i+1)+'</td>';
                 contenu+='<td>'+players[i][0]+'</td>';
                 contenu+='<td>'+players[i][1]+'</td>';
+                contenu+='<td>'+players[i][2]+'</td>';
                 contenu+='<td>'+players[i][3]+'</td>';
                 switch (players[i][4])
                 {
@@ -297,13 +317,13 @@
                 {
                     if(players[i][0]==players[j][0] && players[i][1]==players[j][1])
                     {
-                        occupants[i]=[players[j][0],players[j][1],++numberOccupants,j];
+                        occupants[i]=[players[j][0],players[j][1],++numberOccupants,j,players[i][4]];
                         moreThanOne=true;
                     }
                 }
                 if(!moreThanOne)
                 {
-                    occupants[i]=[players[j][0],players[j][1],numberOccupants,j]
+                    occupants[i]=[players[j][0],players[j][1],numberOccupants,j,players[i][4]]
                 }
             }
             for(i=0;i<occupants.length;i++)
@@ -335,11 +355,41 @@
             return false;
         }
         
-        function getValPx(chaine)
+        function isGameOver()
         {
-            var value = 0;
-            for (var i = 0, len = chaine.length; i < len; i++) {
-                val
+            var numberOfDeads = 0;
+            for(var i=0;i<players.length;i++)
+            {
+                if(players[i][4]==1)
+                {
+                    numberOfDeads++;
+                }
+            }
+            if(numberOfDeads==players.length-1)
+            {
+                for(var i=0;i<players.length;i++)
+                {
+                    if(players[i][4]==0)
+                    {
+                        return [i];
+                    }
+                }
+            }
+            else if(numberOfDeads==players.length)
+            {
+                var playersAlive = [];
+                for (var i=0;i<oldPlayers.length;i++)
+                {
+                    if(oldPlayers[i][4]==0)
+                    {
+                        playersAlive.push(oldPlayers[i]);
+                    }
+                }
+                return playersAlive;
+            }
+            else
+            {
+                return [];
             }
         }
 
