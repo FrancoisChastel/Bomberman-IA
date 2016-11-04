@@ -248,7 +248,7 @@ weighted(Board,[[XCase,YCase]|T],[HOldList|TOldList],[HNewList|TNewList]):- weig
 % Parameter 4 :	Y2
 % Parameter 4 :	Power
 % Return      :	True if the first position can reach the second for a power input else False
-lineOfFire(X1,Y1,X2,Y2,Power):- (X1 = X2; Y1 = Y2),(distanceManhattan([[X1,Y1]],X2,Y2,[Distance|_]),Distance =< Power).
+lineOfFire(X1,Y1,X2,Y2,Power):- (X1 = X2; Y1 = Y2),(distanceManhattan([[X1,Y1]],X2,Y2,[Distance|_]),Distance =< Power),!.
 
 
 % Function    : DefineBoard
@@ -409,12 +409,17 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 
   % ------------------------------------
   
-    (danger(X,Y,BombList) ->
-      (
+    p_danger(danger(X,Y,BombList),Board,BombList,X,Y,TargetX,TargetY,Power,Bomb,NextMove),!.
+
+
+%escapeBomb(X,Y,NextMove):-repeat, board(Board), random_between(0,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
+
+p_danger(Fonction,Board,BombList,X,Y,_,_,_,Bomb,NextMove):-Fonction,	
           % Danger : Move to safe place
           backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
           move(Move,X,Y,NX,NY),
 	  isBomb(NX,NY,BombList,0),
+
           actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove)
       );(
             % No Danger
@@ -435,8 +440,10 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     ),
   !.
 
+p_danger(_,Board,BombList,X,Y,TargetX,TargetY,Power,Bomb,NextMove):-
+	    %No Danger
+	    p_LineOfFire(lineOfFire(X,Y,TargetX,TargetY,Power),Board,BombList,X,Y,TargetX,TargetY,Bomb,NextMove).
 
-%escapeBomb(X,Y,NextMove):-repeat, board(Board), random_between(0,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
  
 % Called By IaAggresive
 %------------------------------------------------  
@@ -466,10 +473,25 @@ actionSafe(Board,X,Y,0,Bomb,_,NextMove):-
             NextMove = -1.
 %------------------------------------------------  
 
+% Target in line of Fire
+% For the next version implement better move after drop bomb
+p_LineOfFire(Fonction,Board,_,X,Y,_,_,Bomb,NextMove):-
+			   Fonction,
+			   dropBomb(X,Y,Board,Bomb),
+			   NextMove = -1,!.
+
+              % No Ennemi in Line of Fire
+              % Check Close Object
+p_LineOfFire(_,Board,BombList,X,Y,TargetX,TargetY,Bomb,NextMove):-
+		           checkCloseObject(Board,BombList,X,Y,Find,Move),
+			   closeObjectDetected(Find,Board,X,Y,TargetX,TargetY,Bomb,Move,NextMove),!.
+				
+
 %Called By IaAggresive  
 %------------------------------------------------  
-closeObjectDetected(1,_,_,_,_,_,_,Move,NextMove):-
-            NextMove = Move.
+closeObjectDetected(1,_,_,_,_,_,Bomb,Move,NextMove):-
+            NextMove = Move,
+	    Bomb = 0.
 
 closeObjectDetected(_,Board,X,Y,TargetX,TargetY,Bomb,_,NextMove):-
     checkSafeAndAttainableSquareAroundPlayer(X,Y,SquareList),

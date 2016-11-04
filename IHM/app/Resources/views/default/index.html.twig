@@ -7,7 +7,7 @@
         <title>Bomberman</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="{{ asset('css/style.css') }}">
         
 
     </head>
@@ -77,7 +77,7 @@
                     board = data['board'];
                     displayInfoPlayers();
                     displayBoard();
-                    setTimeout(motor,400);
+                    setTimeout(motor,500);
                 }
             })
         }
@@ -127,11 +127,11 @@
                     contenu+='<td>';
                     if(board[i][j] == "x")
                     {
-                        contenu+='<img id="block" src="img/wall.png">';
+                        contenu+='<img id="block" src="{{ asset('img/wall.png') }}">';
                     }
                     else if(board[i][j] == "o")
                     {
-                        contenu+='<img id="wallDes" src="img/destructible.png">';
+                        contenu+='<img id="wallDes" src="{{ asset('img/destructible.png') }}">';
                     }
                     else
                     {
@@ -144,39 +144,39 @@
                                 contenu+='<div style="position: relative; left: 0; top: 0;">';
                                 if(board[i][j] == "_" && isThereABomb(i,j))
                                 {
-                                    contenu+='<img id="bomb" src="img/grassBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                    contenu+='<img id="bomb" src="{{ asset('img/grassBomb.png') }}" style="position: relative; top: 0; left: 0;z-index:1;">';
                                 }
                                 else if(board[i][j] == "p")
                                 {
-                                    contenu+='<img id="bombBonus" src="img/bonusBiggerBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                    contenu+='<img id="bombBonus" src="{{ asset('img/bonusBiggerBomb.png') }}" style="position: relative; top: 0; left: 0;z-index:1;">';
                                 }
                                 else if(board[i][j] == "c")
                                 {
-                                    contenu+='<img id="bombBonus" src="img/bonusBombs.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                    contenu+='<img id="bombBonus" src="{{ asset('img/bonusBombs.png') }}" style="position: relative; top: 0; left: 0;z-index:1;">';
                                 }
                                 else 
                                 {
-                                    contenu+='<img id="block" src="img/grass.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                    contenu+='<img id="block" src="{{ asset('img/grass.png') }}" style="position: relative; top: 0; left: 0;z-index:1;">';
                                 }
                                 switch(occupants[n][2])
                                 {
                                     case 1:
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 8px;z-index:2">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 8px;z-index:2">';
                                         break;
                                     case 2:
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 2px;z-index:2">';
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 14px;z-index:3">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 2px;z-index:2">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 8px; left: 14px;z-index:3">';
                                         break;
                                     case 3:
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 8px;z-index:2">';
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 2px;z-index:3">';
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 14px;z-index:4">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 8px;z-index:2">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 2px;z-index:3">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 14px;z-index:4">';
                                         break;
                                     case 4:
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 2px;z-index:2">';
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 14px;z-index:3">';
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 2px;z-index:4">';
-                                        contenu+='<img src="img/betty.png" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 14px;z-index:5">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 2px;z-index:2">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 14px;z-index:3">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 14px; left: 2px;z-index:4">';
+                                        contenu+='<img src="{{ asset('img/betty.png') }}" id="betty'+occupants[n][3]+'" style="position: absolute; top: 2px; left: 14px;z-index:5">';
                                         break;
                                 }
 
@@ -187,19 +187,19 @@
                         {
                             if(board[i][j] == "_" && isThereABomb(i,j))
                             {
-                                contenu+='<img id="bomb" src="img/grassBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                contenu+='<img id="bomb" src="{{ asset('img/grassBomb.png') }}" style="position: relative; top: 0; left: 0;z-index:1;">';
                             }
                             else if(board[i][j] == "p")
                             {
-                                contenu+='<img id="bombBonus" src="img/bonusBiggerBomb.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                contenu+='<img id="bombBonus" src="{{ asset('img/bonusBiggerBomb.png') }}" style="position: relative; top: 0; left: 0;z-index:1;">';
                             }
                             else if(board[i][j] == "c")
                             {
-                                contenu+='<img id="bombBonus" src="img/bonusBombs.png" style="position: relative; top: 0; left: 0;z-index:1;">';
+                                contenu+='<img id="bombBonus" src="{{ asset('img/bonusBombs.png') }}" style="position: relative; top: 0; left: 0;z-index:1;">';
                             }
                             else 
                             {
-                                contenu+='<img id="block" src="img/grass.png">';
+                                contenu+='<img id="block" src="{{ asset('img/grass.png') }}">';
                             }
                         }
                     }
