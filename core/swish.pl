@@ -557,19 +557,18 @@ ia(2,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
     nth0(IndexPlayer,PlayersList,[X,Y,_,_,_,_]),
     createPonderatedList(X,Y,Board,BombList,PlayersList,DropBomb,PonderatedList),
     max_list(PonderatedList,Max),
-    writeln(PonderatedList),
+    %writeln(PonderatedList),
     nth0(Choice,PonderatedList,Max),
-    Bomb = DropBomb,
-    NextMove is Choice,
+   ( (nbChoiceAvailable(X,Y,Board,Escape), Escape >= 1)->
+
+        ( Bomb = DropBomb
+            )
+        ;( Bomb is 0)
+    ),
+    NextMove is Choice-1,
+    %writeln(Bomb),
+    %writeln(NextMove),
     !.
-%    ( (Bomb is 1 )->
-%
-%        ( backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
-%          NextMove is Move
-%            )
-%        ;( NextMove is Choice )
-%    ),
-%    !.
 
 
 
@@ -588,7 +587,7 @@ branch(It,X,Y,Board,PlayerList,BombList,ValueGlobal) :-
     Y1 is Y+1,branch(Index,X,Y1,Board,PlayerList,BombList,Value3),
     X1 is X-1,branch(Index,X1,Y,Board,PlayerList,BombList,Value4),
     correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue),
-    ValueGlobal is (Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue)/It.
+    ValueGlobal is (Value1 + Value2 + Value3 + Value4 + Value0 + WheightValue)/(It).
 
 
 createPonderatedList(X,Y,Board,BombList,PlayerList,Bomb,List) :-
@@ -610,7 +609,7 @@ createPonderatedList(X,Y,Board,BombList,PlayerList,Bomb,List) :-
     Value12 is Value4 + Value8,
     Value13 is Value5 + Value9,
     List = [Value1,Value10,Value11,Value12,Value13],
-    Bomb is DropIt1 + DropIt2 + DropIt3 + DropIt4.
+    max_list([DropIt1,DropIt2,DropIt3,DropIt4],Bomb).
 
 %Function              : bombWorthIt
 %Aim                   : Should the IA drop bomb or not
@@ -650,7 +649,7 @@ moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,
 % Parameter 3 		   : List of bombs
 % Parameter 4 / Return : Value of weight
 
-dangerWeight(X,Y,ListBomb,-10):- danger(X,Y,ListBomb).
+dangerWeight(X,Y,ListBomb,-5):- danger(X,Y,ListBomb).
 dangerWeight(_,_,_,0).
 
 
@@ -665,7 +664,7 @@ nbChoiceAvailable(X,Y,Board,Val):-
 	Y1 is Y-1, availableWeight(X,Y1,Board,Value2),
 	X2 is X-1, availableWeight(X2,Y,Board,Value3),
 	Y2 is Y+1, availableWeight(X,Y2,Board,Value4),
-	Val is Value1 + Value2 + Value3 + Value4.
+	Val is (Value1 + Value2 + Value3 + Value4)*1.3.
 
 
 % Function 			   : availableWeight
@@ -693,8 +692,8 @@ bonusWeight(_,_,_,0).
 % Parameter 2           : Y
 % Parameter 3           : Board
 
-isWall(X,Y,Board,0):- nth0(Y,Board,Line),nth0(X,Line,Square),wall(Square).
-isWall(_,_,_,1).
+isWall(X,Y,Board,-1):- nth0(Y,Board,Line),nth0(X,Line,Square),wall(Square).
+isWall(_,_,_,0).
 
 isDestructible(X,Y,Board,1):-nth0(Y,Board,Line),nth0(X,Line,Square),destructibleBlock(Square).
 isDestructible(_,_,_,0).
@@ -706,13 +705,13 @@ isDirectWall(_,_,_,0).
 correspondingWeightOfCoordinate(X,Y,Board,PlayerList,BombList,WheightValue):-
 bonusWeight(X,Y,Board,Value0),
 nbChoiceAvailable(X,Y,Board,Value1),
-dangerWeight(X,Y,Board,Value2),
+dangerWeight(X,Y,BombList,Value2),
 isWall(X,Y,Board,Value4),
 rapprochement(X,Y,PlayerList,List),
 sum_list(List,Value3),
 isDestructible(X,Y,Board,Value5),
-WheightValue is Value0 + Value1 + Value2 + Value3 + Value4 + Value5*2.
-
+%WheightValue is Value0 + Value1 + Value2 + Value3 + Value4 + Value5.
+WheightValue is Value0 + Value4 + Value5 + Value1 + Value2 + Value3.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -985,7 +984,7 @@ playersTAction(-1, _, _, _, []):- !.
 % Parameter 5 :	Actions of player [IndexPlayer, Direction , Bomb]
 playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
 	nth0(IndexPlayer, Players, [_, _, _, _, 0, Ia]),
-	ia(Ia, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
+	ia(2, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
 playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
 	nth0(IndexPlayer, Players, [_, _, _, _, 1, Ia]),
 	IsPlanting is 0, 
