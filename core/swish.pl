@@ -1083,8 +1083,8 @@ backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
      (  
    ( not(danger(X,Y,ListBomb)) , Safe = 1, Move = -1) ;
    ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
-   ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
    ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+   ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
    ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 ); Safe = 0, Move = -1
      )
      ;   Safe = 0,Move = -1,!.
