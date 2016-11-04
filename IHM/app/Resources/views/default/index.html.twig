@@ -44,10 +44,10 @@
         $('#numberPlayers').change(function()
         {
             var numberPlayers = $('#numberPlayers').val();
-            var contenu = '<div class="form-group">';
+            var contenu = '<div class="form-group" style="margin:auto;width:auto">';
             for(var i=0;i<numberPlayers;i++)
             {
-                contenu+='<label>IA Joueur '+(i+1)+'<select class="playersIA"><option value="1">Aggressive</option><option value="0">Random</option><option value="2">Max</option></select></label><br>'
+                contenu+='<label>IA Joueur '+(i+1)+'<select style="width:150px;" class="playersIA form-control"><option value="1">Aggressive</option><option value="0">Random</option><option value="2">Max</option></select></label><br>'
             }
             contenu+='</div>';
             $('#players').html(contenu);
@@ -105,11 +105,13 @@
                     {
                         displayInfoPlayers();
                         transitionBoard();
+                        var text = '<h1 style="position:relative;top:50%;margin:auto;">Game Over !</h1>';
                         $.ajax({
                             url:'{{ path('game_over') }}',
                             type:'POST',
                             data:{winners : gameOver,players:players}
                         })
+                        $('body').html($('body').html()+text);
                     }
                 }
             });
