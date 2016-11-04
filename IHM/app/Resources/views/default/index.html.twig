@@ -12,7 +12,7 @@
 
     </head>
     <body>
-    <h1 style="text-align: center">Bomberman</h1>
+    <a href="{{ path('homepage') }}"><h1 style="text-align: center">Bomberman</h1></a>
     <form>
     <div id="settings" class="row" style="margin-left:auto;margin-right: auto;margin-top: 40px;width:40%">
         <div class="form-group" style="margin: auto;width:200px">
@@ -47,7 +47,7 @@
             var contenu = '<div class="form-group">';
             for(var i=0;i<numberPlayers;i++)
             {
-                contenu+='<label>IA Joueur '+(i+1)+'<select class="playersIA"><option value="1">Aggressive</option><option value="0">Random</option></select></label><br>'
+                contenu+='<label>IA Joueur '+(i+1)+'<select class="playersIA"><option value="1">Aggressive</option><option value="0">Random</option><option value="2">Max</option></select></label><br>'
             }
             contenu+='</div>';
             $('#players').html(contenu);
