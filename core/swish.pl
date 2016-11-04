@@ -248,7 +248,7 @@ weighted(Board,[[XCase,YCase]|T],[HOldList|TOldList],[HNewList|TNewList]):- weig
 % Parameter 4 :	Y2
 % Parameter 4 :	Power
 % Return      :	True if the first position can reach the second for a power input else False
-lineOfFire(X1,Y1,X2,Y2,Power):- (X1 = X2; Y1 = Y2),(distanceManhattan([[X1,Y1]],X2,Y2,[Distance|_]),Distance =< Power).
+lineOfFire(X1,Y1,X2,Y2,Power):- (X1 = X2; Y1 = Y2),(distanceManhattan([[X1,Y1]],X2,Y2,[Distance|_]),Distance =< Power),!.
 
 
 % Function    : DefineBoard
@@ -409,22 +409,22 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 
   % ------------------------------------
   
-    (danger(X,Y,BombList) ->
-      (
-          % Danger : Move to safe place
-          backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
-          move(Move,X,Y,NX,NY),
-	  isBomb(NX,NY,BombList,0),
-          actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove)
-      );(
-	    %No Danger
-	    p_LineOfFire(line(X,Y,TargetX,TargetY,Power),Board,BombList,X,Y,Bomb,NextMove)
-        )
-    ),
-  !.
+    p_danger(danger(X,Y,BombList),Board,BombList,Bomb,NextMove),!.
 
 
 %escapeBomb(X,Y,NextMove):-repeat, board(Board), random_between(0,3,NextMove),move(NextMove,X,Y,NewX,NewY),accessible(Board,NewX,NewY),!.
+
+p_danger(Fonction,Board,BombList,X,Y,Bomb,NextMove):-Fonction,	
+          % Danger : Move to safe place
+          backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
+          %move(Move,X,Y,NX,NY),
+	  %isBomb(NX,NY,BombList,0),
+          actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove).
+
+p_danger(_,Board,BombList,X,Y,Bomb,NextMove):-
+	    %No Danger
+	    p_LineOfFire(lineOfFire(X,Y,TargetX,TargetY,Power),Board,BombList,X,Y,Bomb,NextMove).
+
  
 % Called By IaAggresive
 %------------------------------------------------  
@@ -459,13 +459,13 @@ actionSafe(Board,X,Y,0,Bomb,_,NextMove):-
 p_LineOfFire(Fonction,Board,_,X,Y,Bomb,NextMove):-
 			   Fonction,
 			   dropBomb(X,Y,Board,Bomb),
-			   NextMove = -1.
+			   NextMove = -1,!.
 
               % No Ennemi in Line of Fire
               % Check Close Object
 p_LineOfFire(_,Board,BombList,X,Y,Bomb,NextMove):-
 		           checkCloseObject(Board,BombList,X,Y,Find,Move),
-			   closeObjectDetected(Find,Board,X,Y,TargetX,TargetY,Bomb,Move,NextMove).
+			   closeObjectDetected(Find,Board,X,Y,TargetX,TargetY,Bomb,Move,NextMove),!.
 				
 
 %Called By IaAggresive  
