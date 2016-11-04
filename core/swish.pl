@@ -683,7 +683,7 @@ availableWeight(_,_,_,0).
 % Parameter 2 		   : y-axis
 % Parameter 3 		   : Board
 % Parameter 4 / Return : Value of weight
-bonusWeight(X,Y,Board,1):- nth0(Y, Board, Line), nth0(X, Line, Square), bonus(Square).
+bonusWeight(X,Y,Board,2):- nth0(Y, Board, Line), nth0(X, Line, Square), bonus(Square).
 bonusWeight(_,_,_,0).
 
 %Function               : isWall
@@ -692,7 +692,7 @@ bonusWeight(_,_,_,0).
 % Parameter 2           : Y
 % Parameter 3           : Board
 
-isWall(X,Y,Board,-1):- nth0(Y,Board,Line),nth0(X,Line,Square),wall(Square).
+isWall(X,Y,Board,-1.5):- nth0(Y,Board,Line),nth0(X,Line,Square),block(Square).
 isWall(_,_,_,0).
 
 isDestructible(X,Y,Board,1):-nth0(Y,Board,Line),nth0(X,Line,Square),destructibleBlock(Square).
@@ -984,7 +984,7 @@ playersTAction(-1, _, _, _, []):- !.
 % Parameter 5 :	Actions of player [IndexPlayer, Direction , Bomb]
 playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
 	nth0(IndexPlayer, Players, [_, _, _, _, 0, Ia]),
-	ia(2, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
+	ia(Ia, IndexPlayer, Players, Board, Bombs, IsPlanting, Direction), !.
 playerAction(Board, Players, Bombs, IndexPlayer, [IndexPlayer, Direction, IsPlanting]):-
 	nth0(IndexPlayer, Players, [_, _, _, _, 1, Ia]),
 	IsPlanting is 0, 
