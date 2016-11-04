@@ -414,23 +414,11 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
           % Danger : Move to safe place
           backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
           move(Move,X,Y,NX,NY),
-	  isBomb(NX,NY,BombList),
+	  isBomb(NX,NY,BombList,0),
           actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove)
       );(
-            % No Danger
-            lineOfFire(X,Y,TargetX,TargetY,Power) ->
-            (   
-              % Target in line of Fire
-              % For the next version implement better move after drop bomb
-              dropBomb(X,Y,Board,Bomb),
-              NextMove = -1
-            );( 
-              % No Ennemi in Line of Fire
-              % Check Close Object
-              checkCloseObject(Board,BombList,X,Y,Find,Move),
-              closeObjectDetected(Find,Board,X,Y,TargetX,TargetY,Bomb,Move,NextMove)
-              
-            )
+	    %No Danger
+	    p_LineOfFire(line(X,Y,TargetX,TargetY,Power),Board,BombList,X,Y,Bomb,NextMove)
         )
     ),
   !.
@@ -465,6 +453,20 @@ actionSafe(Board,X,Y,0,Bomb,_,NextMove):-
             dropBomb(X,Y,Board,Bomb),
             NextMove = -1.
 %------------------------------------------------  
+
+% Target in line of Fire
+% For the next version implement better move after drop bomb
+p_LineOfFire(Fonction,Board,_,X,Y,Bomb,NextMove):-
+			   Fonction,
+			   dropBomb(X,Y,Board,Bomb),
+			   NextMove = -1.
+
+              % No Ennemi in Line of Fire
+              % Check Close Object
+p_LineOfFire(_,Board,BombList,X,Y,Bomb,NextMove):-
+		           checkCloseObject(Board,BombList,X,Y,Find,Move),
+			   closeObjectDetected(Find,Board,X,Y,TargetX,TargetY,Bomb,Move,NextMove).
+				
 
 %Called By IaAggresive  
 %------------------------------------------------  
