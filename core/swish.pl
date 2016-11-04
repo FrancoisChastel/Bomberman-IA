@@ -33,6 +33,7 @@ init(Request):-
 	http_parameters(Request,[ playersIA(PlayersIAJSON, [])]),
 	retractall(board(_)),
         retractall(playersList(_)),
+	retractall(bombsList(_)),
         createMap(Board),
     	assert(board(Board)),
     	assert(playersList([[1, 1, 1, 2, 0, -1], [1, 7, 1, 2, 0, -1], [7, 1, 1, 2, 0, -1], [7, 7, 1, 2, 0, -1]])),
@@ -372,12 +373,14 @@ direction(Xo, Y, 3, Xd, Y):- Xd is Xo-1.
 ia(0,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
 	repeat,
 	nth0(IndexPlayer,PlayersList,[X,Y|T]),
-    	Bomb = 0,
-	random_between(0,4,TMove),
+	randomTen(Bomb),
+	random(-1,4,TMove),
 	move(NextMove,X,Y,NewX,NewY),
-	accessible(Board,NewX,NewY), 
+	accessible(Board,NewX,NewY),
 	!.
 
+randomTen(Bomb):-random(0,10,A), A = 0, Bomb = 1.
+randomTen(0).  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
