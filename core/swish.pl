@@ -413,6 +413,8 @@ ia(1,IndexPlayer,PlayersList,Board,BombList,Bomb,NextMove):-
       (
           % Danger : Move to safe place
           backToSafePlace(X,Y,Board,BombList,[],5,Safe,Move),
+          move(Move,X,Y,NX,NY),
+	  isBomb(NX,NY,BombList),
           actionSafe(Board,X,Y,Safe,Bomb,Move,NextMove)
       );(
             % No Danger
