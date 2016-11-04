@@ -37,6 +37,7 @@
     <script>
         var players = [];
         var oldOccupants = [];
+        var oldPlayers = [];
         var board = [];
         var bombs = [];
         var server;
@@ -71,12 +72,12 @@
                 success:function(data)
                 {
                     $('#settings').remove();
-                    oldOccupants = data['players'];
+                    oldPlayers = data['players'];
                     players = data['players'];
                     board = data['board'];
                     displayInfoPlayers();
                     displayBoard();
-                    setTimeout(motor,800);
+                    setTimeout(motor,400);
                 }
             })
         }
@@ -93,19 +94,21 @@
                     board = data['board'];
                     players = data['players'];
                     bombs = data['bombs'];
-                    var gameOver = false;
-                    if(!gameOver)
+                    var gameOver = isGameOver();
+                    if(gameOver.length==0)
                     {
                         displayInfoPlayers();
                         transitionBoard();
-                        setTimeout(motor,1000);
+                        setTimeout(motor,500);
                     }
                     else 
                     {
+                        displayInfoPlayers();
+                        transitionBoard();
                         $.ajax({
                             url:'{{ path('game_over') }}',
                             type:'POST',
-                            data:{players : players,bombs:bombsDropped}
+                            data:{winners : gameOver,players:players}
                         })
                     }
                 }
@@ -258,7 +261,7 @@
                     }
                 }
             }
-            setTimeout(displayBoard,500);
+            setTimeout(displayBoard,250);
         }
         
         function displayInfoPlayers()
@@ -352,7 +355,7 @@
             return false;
         }
         
-        function gameOver()
+        function isGameOver()
         {
             var numberOfDeads = 0;
             for(var i=0;i<players.length;i++)
@@ -368,16 +371,25 @@
                 {
                     if(players[i][4]==0)
                     {
-                        return players[i];
+                        return [i];
                     }
                 }
             }
             else if(numberOfDeads==players.length)
             {
-                for (var i=0;i<oldOccupants.length;i++)
+                var playersAlive = [];
+                for (var i=0;i<oldPlayers.length;i++)
                 {
-                    
+                    if(oldPlayers[i][4]==0)
+                    {
+                        playersAlive.push(oldPlayers[i]);
+                    }
                 }
+                return playersAlive;
+            }
+            else
+            {
+                return [];
             }
         }
 
