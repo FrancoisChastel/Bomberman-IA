@@ -654,7 +654,7 @@ moreCloser(X,Y,XEnnemy,YEnnemy,Val):- distanceManhattan([[X,Y]],XEnnemy,YEnnemy,
 % Parameter 3 		   : List of bombs
 % Parameter 4 / Return : Value of weight
 
-dangerWeight(X,Y,ListBomb,-9):- danger(X,Y,ListBomb).
+dangerWeight(X,Y,ListBomb,-10):- danger(X,Y,ListBomb).
 dangerWeight(_,_,_,0).
 
 
@@ -697,7 +697,7 @@ bonusWeight(_,_,_,0).
 % Parameter 2           : Y
 % Parameter 3           : Board
 
-isWall(X,Y,Board,-3):- nth0(Y,Board,Line),nth0(X,Line,Square),block(Square).
+isWall(X,Y,Board,-2):- nth0(Y,Board,Line),nth0(X,Line,Square),block(Square).
 isWall(_,_,_,0).
 
 isDestructible(X,Y,Board,2):-nth0(Y,Board,Line),nth0(X,Line,Square),destructibleBlock(Square).
@@ -715,7 +715,7 @@ isWall(X,Y,Board,Value4),
 rapprochement(X,Y,PlayerList,List),
 sum_list(List,Value3),
 isDestructible(X,Y,Board,Value5),
-WheightValue is Value0 + Value1 + Value2 + Value3 + Value4 + Value5.
+WheightValue is Value0 + Value1 + Value2 + Value3*3 + Value4 + Value5.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
