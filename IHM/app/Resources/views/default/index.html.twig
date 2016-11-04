@@ -7,7 +7,7 @@
         <title>Bomberman</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="{{ asset('css/style.css') }}">
         
 
     </head>
@@ -77,7 +77,7 @@
                     board = data['board'];
                     displayInfoPlayers();
                     displayBoard();
-                    setTimeout(motor,400);
+                    setTimeout(motor,500);
                 }
             })
         }
