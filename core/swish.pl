@@ -175,7 +175,13 @@ obtainBonus( Board, Player, NewBoard, NewPlayer):-
 	updateList(3, NewPuissance, Player, NewPlayer), !.
 obtainBonus( NewBoard, NewPlayer, NewBoard, NewPlayer):- !.
 
+isBomb2(_,_,[],0).
+isBomb2(X,Y,[[X,Y,_,_]|T],R):- isBomb2(X,Y,T,R2), R=1,!.
+isBomb2(X,Y,[[X2,Y2,_,_]|T],R):- isBomb2(X,Y,T,R2), R=R2,!.
 
+isBomb(X,Y,[],0).
+isBomb(X,Y,[H|T],1):- isBomb2(X,Y,H,1),!.
+isBomb(X,Y,[H|T],R):- isBomb2(X,Y,H,0), isBomb(X,Y,T,R),!.
 		
 % Function    : Accessible
 % Objective   : Know if a point is accessible for a player
@@ -1024,34 +1030,61 @@ backToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
             Safe = IsSafe,Move = IsMove;
           Safe = 0,Move = -1.
 
-functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
-    DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 >= 0,
-    (   accessible(Board,X,Y), not(nth0(Index,N,[X,Y])))->
-    append(N,[[X,Y]],N2),
-    (   
-  ( not(danger(X,Y,ListBomb)) , Safe = 1) ;
-  ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
-  ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
-  ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
-  ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 )
-    )
-    ;   Safe = 0.
+%functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
+%    DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 >= 0,
+%    (   accessible(Board,X,Y), not(nth0(Index,N,[X,Y])))->
+%    append(N,[[X,Y]],N2),
+%    (   
+%  ( not(danger(X,Y,ListBomb)) , Safe = 1) ;
+%  ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
+%  ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
+%  ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+%  ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 );
+%    Safe = 0, Move=-1
+%    )
+%    ;   Safe = 0,Move=-1.
+%
+%initFunctionSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
+%    %DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 > 0,
+%    DistanceLimit > 0,
+%    (  not(nth0(Index,N,[X,Y])))->
+%    append(N,[[X,Y]],N2),
+%    (   
+%  ( not(danger(X,Y,ListBomb)) , Safe = 1, Move = -1) ;
+%  ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
+%  ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
+%  ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+%  ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 );
+%    Safe=0,Move=-1
+%    )
+%    ;   Safe = 0,Move=-1.
 
-initFunctionSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
-    %DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 > 0,
-    DistanceLimit > 0,
-    (  not(nth0(Index,N,[X,Y])))->
-    append(N,[[X,Y]],N2),
-    (   
-  ( not(danger(X,Y,ListBomb)) , Safe = 1, Move = -1) ;
-  ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
-  ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
-  ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
-  ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 )
-    )
-    ;   Safe = 0.
-
-
+ functionBackToSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
+     DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 >= 0,
+     (   accessible(Board,X,Y), isBomb(X,Y,ListBomb,0), not(nth0(Index,N,[X,Y])))->
+     append(N,[[X,Y]],N2),
+     (  
+   ( not(danger(X,Y,ListBomb)) , Safe = 1) ;
+   ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
+   ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
+   ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+   ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit2,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 ); Safe = 0, Move = -1
+     )
+     ;   Safe = 0,Move = -1.
+ 
+ initFunctionSafePlace(X,Y,Board,ListBomb,N,DistanceLimit,Safe,Move):-
+     %DistanceLimit2 is DistanceLimit - 1, DistanceLimit2 > 0,
+     DistanceLimit > 0,
+     (  not(nth0(Index,N,[X,Y])))->
+     append(N,[[X,Y]],N2),
+     (  
+   ( not(danger(X,Y,ListBomb)) , Safe = 1, Move = -1) ;
+   ( Ydep is Y-1 , functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1  , Move = 0 );
+   ( Xdep is X-1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 3 );
+   ( Ydep is Y+1, functionBackToSafePlace(X,Ydep,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 2 );
+   ( Xdep is X+1, functionBackToSafePlace(Xdep,Y,Board,ListBomb,N2,DistanceLimit,Safe2,Move2) , ( Safe2 =:=1 ), Safe = 1   , Move = 1 ); Safe = 0, Move = -1
+     )
+     ;   Safe = 0,Move = -1.
 
 
 % Function    : displayBoard
